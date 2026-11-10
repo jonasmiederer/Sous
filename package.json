@@ -1,6 +1,6 @@
 {
   "name": "sous",
-  "version": "0.2.1",
+  "version": "0.3.0",
   "private": true,
   "description": "Sous: AWS-native meal planner with a Bedrock AgentCore Suggestion_Agent",
   "type": "module",
