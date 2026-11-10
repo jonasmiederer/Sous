@@ -252,7 +252,7 @@ describe('SousStack', () => {
     expect(JSON.stringify(invoke.Resource)).toContain('inference-profile/*anthropic.claude-*');
   });
 
-  it('passes agentModelId and the preference strategy id to the runtime and rejects non-Claude ids', () => {
+  it('passes agentModelId and the preference strategy id to the runtime and rejects non-Claude/Nova ids', () => {
     const t = synth({ agentModelId: 'eu.anthropic.claude-haiku-5-5', memoryPreferenceStrategyId: 'strat-1' });
     t.hasResourceProperties('AWS::BedrockAgentCore::Runtime', {
       EnvironmentVariables: Match.objectLike({
@@ -260,7 +260,9 @@ describe('SousStack', () => {
         MEMORY_PREFERENCE_STRATEGY_ID: 'strat-1',
       }),
     });
-    expect(() => synth({ agentModelId: 'amazon.nova-pro-v1:0' })).toThrow(/Claude/);
+    // Amazon Nova ids are allowed (e.g. the Nova 2 Lite default used for testing).
+    expect(() => synth({ agentModelId: 'amazon.nova-pro-v1:0' })).not.toThrow();
+    expect(() => synth({ agentModelId: 'meta.llama3-70b-instruct-v1:0' })).toThrow(/Claude or Amazon Nova/);
   });
 
   it('takes an existing runtime ARN as a parameter in parameter mode', () => {
