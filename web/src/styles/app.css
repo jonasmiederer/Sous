@@ -1,0 +1,212 @@
+@import 'tailwindcss';
+
+/*
+ * Sous design tokens.
+ *
+ * Light values are the default. Dark values follow the device preference
+ * (`prefers-color-scheme: dark`), and `data-theme="light|dark"` on <html>
+ * overrides either way (set by ThemeToggle, stored in `sous.theme.v1`).
+ * Keep the two dark blocks below identical.
+ *
+ * WCAG 2.1 AA contrast pairs (ratio light / dark). Text needs 4.5:1,
+ * large text and UI boundaries need 3:1.
+ *   text           on bg / surface / surface-2      15.66 / 16.14,  16.69 / 14.65,  14.65 / 12.85
+ *   text-muted     on bg / surface / surface-2       6.59 /  8.60,   7.03 /  7.81,   6.17 /  6.85
+ *   accent-contrast on accent                        6.39 /  8.66
+ *   accent         on bg / surface / surface-2       6.00 /  8.85,   6.39 /  8.03,   5.61 /  7.04
+ *   accent-text    on accent-soft                    6.88 /  7.62
+ *   text           on accent-soft                   14.10 / 11.93
+ *   danger         on surface / danger-soft          6.57 /  7.26,   5.75 /  6.71
+ *   warning        on surface / warning-soft         5.93 /  9.86,   5.37 /  8.53
+ *   inverse-text   on inverse (toasts)              16.69 / 14.65
+ *   border-strong  on bg / surface (input edges)     3.52 /  3.95,   3.75 /  3.58   (UI, 3:1)
+ *   focus          on bg / surface (focus ring)      5.45 /  8.74,   5.81 /  7.93   (UI, 3:1)
+ * `border` is a decorative divider only and is never the sole boundary of
+ * an interactive control.
+ */
+:root {
+  color-scheme: light dark;
+  --color-bg: #f7f8f5;
+  --color-surface: #ffffff;
+  --color-surface-2: #eef1ec;
+  --color-text: #17201a;
+  --color-text-muted: #4f5c53;
+  --color-border: #d5dcd4;
+  --color-border-strong: #7a877e;
+  --color-accent: #2f6b3a;
+  --color-accent-hover: #275a31;
+  --color-accent-contrast: #ffffff;
+  --color-accent-soft: #e3efe4;
+  --color-accent-text: #245a2e;
+  --color-danger: #b42318;
+  --color-danger-soft: #fdecea;
+  --color-warning: #8a5a00;
+  --color-warning-soft: #fdf3dc;
+  --color-focus: #1f5fd1;
+  --color-inverse: #17201a;
+  --color-inverse-text: #ffffff;
+  --color-scrim: rgb(10 14 11 / 0.45);
+  --shadow-card: 0 1px 2px rgb(23 32 26 / 0.06), 0 1px 3px rgb(23 32 26 / 0.08);
+  --shadow-raised: 0 8px 24px rgb(23 32 26 / 0.12), 0 2px 6px rgb(23 32 26 / 0.08);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    --color-bg: #121614;
+    --color-surface: #1a201c;
+    --color-surface-2: #232b26;
+    --color-text: #eef2ee;
+    --color-text-muted: #a9b5ac;
+    --color-border: #343f38;
+    --color-border-strong: #6b786f;
+    --color-accent: #7fc48c;
+    --color-accent-hover: #93d19f;
+    --color-accent-contrast: #0e1a11;
+    --color-accent-soft: #1f3324;
+    --color-accent-text: #93d19f;
+    --color-danger: #ff8a80;
+    --color-danger-soft: #3a1d1b;
+    --color-warning: #f2c063;
+    --color-warning-soft: #33290f;
+    --color-focus: #8ab4ff;
+    --color-inverse: #eef2ee;
+    --color-inverse-text: #1a201c;
+    --color-scrim: rgb(0 0 0 / 0.6);
+    --shadow-card: 0 1px 2px rgb(0 0 0 / 0.4);
+    --shadow-raised: 0 8px 24px rgb(0 0 0 / 0.5), 0 2px 6px rgb(0 0 0 / 0.4);
+  }
+}
+
+:root[data-theme='dark'] {
+  color-scheme: dark;
+  --color-bg: #121614;
+  --color-surface: #1a201c;
+  --color-surface-2: #232b26;
+  --color-text: #eef2ee;
+  --color-text-muted: #a9b5ac;
+  --color-border: #343f38;
+  --color-border-strong: #6b786f;
+  --color-accent: #7fc48c;
+  --color-accent-hover: #93d19f;
+  --color-accent-contrast: #0e1a11;
+  --color-accent-soft: #1f3324;
+  --color-accent-text: #93d19f;
+  --color-danger: #ff8a80;
+  --color-danger-soft: #3a1d1b;
+  --color-warning: #f2c063;
+  --color-warning-soft: #33290f;
+  --color-focus: #8ab4ff;
+  --color-inverse: #eef2ee;
+  --color-inverse-text: #1a201c;
+  --color-scrim: rgb(0 0 0 / 0.6);
+  --shadow-card: 0 1px 2px rgb(0 0 0 / 0.4);
+  --shadow-raised: 0 8px 24px rgb(0 0 0 / 0.5), 0 2px 6px rgb(0 0 0 / 0.4);
+}
+
+:root[data-theme='light'] {
+  color-scheme: light;
+}
+
+@theme inline {
+  --color-bg: var(--color-bg);
+  --color-surface: var(--color-surface);
+  --color-surface-2: var(--color-surface-2);
+  --color-text: var(--color-text);
+  --color-text-muted: var(--color-text-muted);
+  --color-border: var(--color-border);
+  --color-border-strong: var(--color-border-strong);
+  --color-accent: var(--color-accent);
+  --color-accent-hover: var(--color-accent-hover);
+  --color-accent-contrast: var(--color-accent-contrast);
+  --color-accent-soft: var(--color-accent-soft);
+  --color-accent-text: var(--color-accent-text);
+  --color-danger: var(--color-danger);
+  --color-danger-soft: var(--color-danger-soft);
+  --color-warning: var(--color-warning);
+  --color-warning-soft: var(--color-warning-soft);
+  --color-focus: var(--color-focus);
+  --color-inverse: var(--color-inverse);
+  --color-inverse-text: var(--color-inverse-text);
+  --color-scrim: var(--color-scrim);
+  --shadow-card: var(--shadow-card);
+  --shadow-raised: var(--shadow-raised);
+  --font-sans:
+    system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial,
+    sans-serif;
+  --ease-out-soft: cubic-bezier(0.22, 1, 0.36, 1);
+  --animate-fade-in: fade-in 160ms var(--ease-out-soft);
+  --animate-rise-in: rise-in 220ms var(--ease-out-soft);
+  --animate-sheet-in: sheet-in 260ms var(--ease-out-soft);
+  --animate-panel-in: panel-in 260ms var(--ease-out-soft);
+
+  @keyframes fade-in {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+  @keyframes rise-in {
+    from {
+      opacity: 0;
+      transform: translateY(8px) scale(0.98);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+  @keyframes sheet-in {
+    from {
+      transform: translateY(100%);
+    }
+    to {
+      transform: none;
+    }
+  }
+  @keyframes panel-in {
+    from {
+      transform: translateX(100%);
+    }
+    to {
+      transform: none;
+    }
+  }
+}
+
+@layer base {
+  html {
+    /* 16 px base keeps iOS from zooming on input focus. */
+    font-size: 100%;
+    -webkit-text-size-adjust: 100%;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  body {
+    @apply bg-bg font-sans text-text antialiased;
+    min-height: 100dvh;
+    /* Never scroll sideways (Requirement 13.1). */
+    overflow-x: hidden;
+  }
+
+  :focus-visible {
+    outline: 3px solid var(--color-focus);
+    outline-offset: 2px;
+  }
+
+  dialog::backdrop {
+    background: var(--color-scrim);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}

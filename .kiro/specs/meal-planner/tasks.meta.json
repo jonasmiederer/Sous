@@ -1,0 +1,1041 @@
+{
+  "pbtResults": {},
+  "executionHistory": {
+    "1. Set up project scaffolding, domain types, and tooling": [
+      {
+        "executionId": "aa453e4c-f0df-49c6-9c11-73a6782474d7",
+        "chatSessionId": "sess_d938f875-22c8-4890-81d8-ff1e33ea8d91",
+        "timestamp": 1794239904806
+      },
+      {
+        "executionId": "aa453e4c-f0df-49c6-9c11-73a6782474d7",
+        "chatSessionId": "sess_d938f875-22c8-4890-81d8-ff1e33ea8d91",
+        "timestamp": 1794239924304
+      },
+      {
+        "executionId": "aa453e4c-f0df-49c6-9c11-73a6782474d7",
+        "chatSessionId": "sess_d938f875-22c8-4890-81d8-ff1e33ea8d91",
+        "timestamp": 1794240129696
+      }
+    ],
+    "2.1 Implement key construction and the Household-scoped repository": [
+      {
+        "executionId": "aa453e4c-f0df-49c6-9c11-73a6782474d7",
+        "chatSessionId": "sess_d938f875-22c8-4890-81d8-ff1e33ea8d91",
+        "timestamp": 1794239904857
+      },
+      {
+        "executionId": "aa453e4c-f0df-49c6-9c11-73a6782474d7",
+        "chatSessionId": "sess_d938f875-22c8-4890-81d8-ff1e33ea8d91",
+        "timestamp": 1794240133272
+      },
+      {
+        "executionId": "aa453e4c-f0df-49c6-9c11-73a6782474d7",
+        "chatSessionId": "sess_d938f875-22c8-4890-81d8-ff1e33ea8d91",
+        "timestamp": 1794240416402
+      }
+    ],
+    "3.1 Implement Household creation and membership rules": [
+      {
+        "executionId": "aa453e4c-f0df-49c6-9c11-73a6782474d7",
+        "chatSessionId": "sess_d938f875-22c8-4890-81d8-ff1e33ea8d91",
+        "timestamp": 1794239904885
+      },
+      {
+        "executionId": "aa453e4c-f0df-49c6-9c11-73a6782474d7",
+        "chatSessionId": "sess_d938f875-22c8-4890-81d8-ff1e33ea8d91",
+        "timestamp": 1794240426646
+      },
+      {
+        "executionId": "f78904c8-187f-4777-aa3a-9eacf48eaadd",
+        "chatSessionId": "sess_d938f875-22c8-4890-81d8-ff1e33ea8d91",
+        "timestamp": 1794240641714
+      }
+    ],
+    "3.4 Implement the Invitation lifecycle state machine": [
+      {
+        "executionId": "aa453e4c-f0df-49c6-9c11-73a6782474d7",
+        "chatSessionId": "sess_d938f875-22c8-4890-81d8-ff1e33ea8d91",
+        "timestamp": 1794239904911
+      },
+      {
+        "executionId": "f78904c8-187f-4777-aa3a-9eacf48eaadd",
+        "chatSessionId": "sess_d938f875-22c8-4890-81d8-ff1e33ea8d91",
+        "timestamp": 1794241102456
+      },
+      {
+        "executionId": "f78904c8-187f-4777-aa3a-9eacf48eaadd",
+        "chatSessionId": "sess_d938f875-22c8-4890-81d8-ff1e33ea8d91",
+        "timestamp": 1794241217142
+      }
+    ],
+    "4.1 Implement Preference_Profile mutations": [
+      {
+        "executionId": "aa453e4c-f0df-49c6-9c11-73a6782474d7",
+        "chatSessionId": "sess_d938f875-22c8-4890-81d8-ff1e33ea8d91",
+        "timestamp": 1794239904943
+      },
+      {
+        "executionId": "aa453e4c-f0df-49c6-9c11-73a6782474d7",
+        "chatSessionId": "sess_d938f875-22c8-4890-81d8-ff1e33ea8d91",
+        "timestamp": 1794240426685
+      },
+      {
+        "executionId": "f78904c8-187f-4777-aa3a-9eacf48eaadd",
+        "chatSessionId": "sess_d938f875-22c8-4890-81d8-ff1e33ea8d91",
+        "timestamp": 1794240641843
+      }
+    ],
+    "4.4 Implement deterministic exclusion enforcement and preset validation": [
+      {
+        "executionId": "aa453e4c-f0df-49c6-9c11-73a6782474d7",
+        "chatSessionId": "sess_d938f875-22c8-4890-81d8-ff1e33ea8d91",
+        "timestamp": 1794239904970
+      },
+      {
+        "executionId": "aa453e4c-f0df-49c6-9c11-73a6782474d7",
+        "chatSessionId": "sess_d938f875-22c8-4890-81d8-ff1e33ea8d91",
+        "timestamp": 1794240426718
+      },
+      {
+        "executionId": "f78904c8-187f-4777-aa3a-9eacf48eaadd",
+        "chatSessionId": "sess_d938f875-22c8-4890-81d8-ff1e33ea8d91",
+        "timestamp": 1794240695446
+      },
+      {
+        "executionId": "f78904c8-187f-4777-aa3a-9eacf48eaadd",
+        "chatSessionId": "sess_d938f875-22c8-4890-81d8-ff1e33ea8d91",
+        "timestamp": 1794241080823
+      }
+    ],
+    "5.1 Implement Fridge_Inventory replacement and ranking": [
+      {
+        "executionId": "aa453e4c-f0df-49c6-9c11-73a6782474d7",
+        "chatSessionId": "sess_d938f875-22c8-4890-81d8-ff1e33ea8d91",
+        "timestamp": 1794239905003
+      },
+      {
+        "executionId": "aa453e4c-f0df-49c6-9c11-73a6782474d7",
+        "chatSessionId": "sess_d938f875-22c8-4890-81d8-ff1e33ea8d91",
+        "timestamp": 1794240426764
+      },
+      {
+        "executionId": "f78904c8-187f-4777-aa3a-9eacf48eaadd",
+        "chatSessionId": "sess_d938f875-22c8-4890-81d8-ff1e33ea8d91",
+        "timestamp": 1794240641885
+      }
+    ],
+    "5.4 Implement grocery-list consolidation and fridge subtraction": [
+      {
+        "executionId": "aa453e4c-f0df-49c6-9c11-73a6782474d7",
+        "chatSessionId": "sess_d938f875-22c8-4890-81d8-ff1e33ea8d91",
+        "timestamp": 1794239905027
+      },
+      {
+        "executionId": "aa453e4c-f0df-49c6-9c11-73a6782474d7",
+        "chatSessionId": "sess_d938f875-22c8-4890-81d8-ff1e33ea8d91",
+        "timestamp": 1794240427019
+      },
+      {
+        "executionId": "f78904c8-187f-4777-aa3a-9eacf48eaadd",
+        "chatSessionId": "sess_d938f875-22c8-4890-81d8-ff1e33ea8d91",
+        "timestamp": 1794240641925
+      }
+    ],
+    "6. Checkpoint - deterministic domain logic": [
+      {
+        "executionId": "aa453e4c-f0df-49c6-9c11-73a6782474d7",
+        "chatSessionId": "sess_d938f875-22c8-4890-81d8-ff1e33ea8d91",
+        "timestamp": 1794239905052
+      },
+      {
+        "executionId": "f78904c8-187f-4777-aa3a-9eacf48eaadd",
+        "chatSessionId": "sess_d938f875-22c8-4890-81d8-ff1e33ea8d91",
+        "timestamp": 1794241235497
+      },
+      {
+        "executionId": "f78904c8-187f-4777-aa3a-9eacf48eaadd",
+        "chatSessionId": "sess_d938f875-22c8-4890-81d8-ff1e33ea8d91",
+        "timestamp": 1794241264025
+      }
+    ],
+    "7.1 Implement the AgentCore Runtime client and invocation payload assembly": [
+      {
+        "executionId": "aa453e4c-f0df-49c6-9c11-73a6782474d7",
+        "chatSessionId": "sess_d938f875-22c8-4890-81d8-ff1e33ea8d91",
+        "timestamp": 1794239905077
+      },
+      {
+        "executionId": "f78904c8-187f-4777-aa3a-9eacf48eaadd",
+        "chatSessionId": "sess_d938f875-22c8-4890-81d8-ff1e33ea8d91",
+        "timestamp": 1794240690990
+      },
+      {
+        "executionId": "f78904c8-187f-4777-aa3a-9eacf48eaadd",
+        "chatSessionId": "sess_d938f875-22c8-4890-81d8-ff1e33ea8d91",
+        "timestamp": 1794241080891
+      }
+    ],
+    "7.2 Implement the AgentCore Memory client for short-term and long-term memory": [
+      {
+        "executionId": "aa453e4c-f0df-49c6-9c11-73a6782474d7",
+        "chatSessionId": "sess_d938f875-22c8-4890-81d8-ff1e33ea8d91",
+        "timestamp": 1794239905102
+      },
+      {
+        "executionId": "f78904c8-187f-4777-aa3a-9eacf48eaadd",
+        "chatSessionId": "sess_d938f875-22c8-4890-81d8-ff1e33ea8d91",
+        "timestamp": 1794240691336
+      },
+      {
+        "executionId": "f78904c8-187f-4777-aa3a-9eacf48eaadd",
+        "chatSessionId": "sess_d938f875-22c8-4890-81d8-ff1e33ea8d91",
+        "timestamp": 1794241080930
+      }
+    ],
+    "8.1 Implement ad hoc suggestion orchestration": [
+      {
+        "executionId": "aa453e4c-f0df-49c6-9c11-73a6782474d7",
+        "chatSessionId": "sess_d938f875-22c8-4890-81d8-ff1e33ea8d91",
+        "timestamp": 1794239905127
+      },
+      {
+        "executionId": "f78904c8-187f-4777-aa3a-9eacf48eaadd",
+        "chatSessionId": "sess_d938f875-22c8-4890-81d8-ff1e33ea8d91",
+        "timestamp": 1794241264076
+      },
+      {
+        "executionId": "f78904c8-187f-4777-aa3a-9eacf48eaadd",
+        "chatSessionId": "sess_d938f875-22c8-4890-81d8-ff1e33ea8d91",
+        "timestamp": 1794241674863
+      }
+    ],
+    "9.1 Implement plan generation and day editing": [
+      {
+        "executionId": "aa453e4c-f0df-49c6-9c11-73a6782474d7",
+        "chatSessionId": "sess_d938f875-22c8-4890-81d8-ff1e33ea8d91",
+        "timestamp": 1794239905152
+      },
+      {
+        "executionId": "f78904c8-187f-4777-aa3a-9eacf48eaadd",
+        "chatSessionId": "sess_d938f875-22c8-4890-81d8-ff1e33ea8d91",
+        "timestamp": 1794241264114
+      },
+      {
+        "executionId": "f78904c8-187f-4777-aa3a-9eacf48eaadd",
+        "chatSessionId": "sess_d938f875-22c8-4890-81d8-ff1e33ea8d91",
+        "timestamp": 1794241674947
+      }
+    ],
+    "10.1 Wire grocery generation and the MealPlanChanged consumer": [
+      {
+        "executionId": "aa453e4c-f0df-49c6-9c11-73a6782474d7",
+        "chatSessionId": "sess_d938f875-22c8-4890-81d8-ff1e33ea8d91",
+        "timestamp": 1794239905177
+      },
+      {
+        "executionId": "f78904c8-187f-4777-aa3a-9eacf48eaadd",
+        "chatSessionId": "sess_d938f875-22c8-4890-81d8-ff1e33ea8d91",
+        "timestamp": 1794241681451
+      },
+      {
+        "executionId": "f78904c8-187f-4777-aa3a-9eacf48eaadd",
+        "chatSessionId": "sess_d938f875-22c8-4890-81d8-ff1e33ea8d91",
+        "timestamp": 1794242928345
+      }
+    ],
+    "11.1 Wire preference and fridge endpoints": [
+      {
+        "executionId": "aa453e4c-f0df-49c6-9c11-73a6782474d7",
+        "chatSessionId": "sess_d938f875-22c8-4890-81d8-ff1e33ea8d91",
+        "timestamp": 1794239905202
+      },
+      {
+        "executionId": "f78904c8-187f-4777-aa3a-9eacf48eaadd",
+        "chatSessionId": "sess_d938f875-22c8-4890-81d8-ff1e33ea8d91",
+        "timestamp": 1794241682640
+      },
+      {
+        "executionId": "f78904c8-187f-4777-aa3a-9eacf48eaadd",
+        "chatSessionId": "sess_d938f875-22c8-4890-81d8-ff1e33ea8d91",
+        "timestamp": 1794242928432
+      }
+    ],
+    "12.1 Implement conversation creation and refinement routing": [
+      {
+        "executionId": "aa453e4c-f0df-49c6-9c11-73a6782474d7",
+        "chatSessionId": "sess_d938f875-22c8-4890-81d8-ff1e33ea8d91",
+        "timestamp": 1794239905227
+      },
+      {
+        "executionId": "f78904c8-187f-4777-aa3a-9eacf48eaadd",
+        "chatSessionId": "sess_d938f875-22c8-4890-81d8-ff1e33ea8d91",
+        "timestamp": 1794241264142
+      },
+      {
+        "executionId": "f78904c8-187f-4777-aa3a-9eacf48eaadd",
+        "chatSessionId": "sess_d938f875-22c8-4890-81d8-ff1e33ea8d91",
+        "timestamp": 1794241675589
+      }
+    ],
+    "13.1 Implement voice transcription and confirmation flow": [
+      {
+        "executionId": "aa453e4c-f0df-49c6-9c11-73a6782474d7",
+        "chatSessionId": "sess_d938f875-22c8-4890-81d8-ff1e33ea8d91",
+        "timestamp": 1794239905252
+      },
+      {
+        "executionId": "f78904c8-187f-4777-aa3a-9eacf48eaadd",
+        "chatSessionId": "sess_d938f875-22c8-4890-81d8-ff1e33ea8d91",
+        "timestamp": 1794241683946
+      },
+      {
+        "executionId": "f78904c8-187f-4777-aa3a-9eacf48eaadd",
+        "chatSessionId": "sess_d938f875-22c8-4890-81d8-ff1e33ea8d91",
+        "timestamp": 1794242928497
+      }
+    ],
+    "14.1 Wire auth endpoints and membership operations over Cognito": [
+      {
+        "executionId": "aa453e4c-f0df-49c6-9c11-73a6782474d7",
+        "chatSessionId": "sess_d938f875-22c8-4890-81d8-ff1e33ea8d91",
+        "timestamp": 1794239905277
+      },
+      {
+        "executionId": "f78904c8-187f-4777-aa3a-9eacf48eaadd",
+        "chatSessionId": "sess_d938f875-22c8-4890-81d8-ff1e33ea8d91",
+        "timestamp": 1794241264917
+      },
+      {
+        "executionId": "f78904c8-187f-4777-aa3a-9eacf48eaadd",
+        "chatSessionId": "sess_d938f875-22c8-4890-81d8-ff1e33ea8d91",
+        "timestamp": 1794241676516
+      }
+    ],
+    "15.1 Wire the authorizer and cross-member read path": [
+      {
+        "executionId": "aa453e4c-f0df-49c6-9c11-73a6782474d7",
+        "chatSessionId": "sess_d938f875-22c8-4890-81d8-ff1e33ea8d91",
+        "timestamp": 1794239905301
+      },
+      {
+        "executionId": "f78904c8-187f-4777-aa3a-9eacf48eaadd",
+        "chatSessionId": "sess_d938f875-22c8-4890-81d8-ff1e33ea8d91",
+        "timestamp": 1794241684598
+      },
+      {
+        "executionId": "f78904c8-187f-4777-aa3a-9eacf48eaadd",
+        "chatSessionId": "sess_d938f875-22c8-4890-81d8-ff1e33ea8d91",
+        "timestamp": 1794242928852
+      }
+    ],
+    "16.1 Define IaC for all AWS components": [
+      {
+        "executionId": "aa453e4c-f0df-49c6-9c11-73a6782474d7",
+        "chatSessionId": "sess_d938f875-22c8-4890-81d8-ff1e33ea8d91",
+        "timestamp": 1794239905326
+      },
+      {
+        "executionId": "f78904c8-187f-4777-aa3a-9eacf48eaadd",
+        "chatSessionId": "sess_d938f875-22c8-4890-81d8-ff1e33ea8d91",
+        "timestamp": 1794242934288
+      },
+      {
+        "executionId": "f78904c8-187f-4777-aa3a-9eacf48eaadd",
+        "chatSessionId": "sess_d938f875-22c8-4890-81d8-ff1e33ea8d91",
+        "timestamp": 1794243798733
+      }
+    ],
+    "18. Final checkpoint - full suite": [
+      {
+        "executionId": "aa453e4c-f0df-49c6-9c11-73a6782474d7",
+        "chatSessionId": "sess_d938f875-22c8-4890-81d8-ff1e33ea8d91",
+        "timestamp": 1794239905351
+      },
+      {
+        "executionId": "f78904c8-187f-4777-aa3a-9eacf48eaadd",
+        "chatSessionId": "sess_d938f875-22c8-4890-81d8-ff1e33ea8d91",
+        "timestamp": 1794243803364
+      },
+      {
+        "executionId": "f78904c8-187f-4777-aa3a-9eacf48eaadd",
+        "chatSessionId": "sess_d938f875-22c8-4890-81d8-ff1e33ea8d91",
+        "timestamp": 1794243964594
+      }
+    ],
+    "2. Implement the DynamoDB single-table data access layer": [
+      {
+        "executionId": "aa453e4c-f0df-49c6-9c11-73a6782474d7",
+        "chatSessionId": "sess_d938f875-22c8-4890-81d8-ff1e33ea8d91",
+        "timestamp": 1794240416435
+      }
+    ],
+    "5. Implement fridge and grocery-list domain logic (pure functions)": [
+      {
+        "executionId": "f78904c8-187f-4777-aa3a-9eacf48eaadd",
+        "chatSessionId": "sess_d938f875-22c8-4890-81d8-ff1e33ea8d91",
+        "timestamp": 1794240641950
+      }
+    ],
+    "4. Implement preference, preset, and exclusion domain logic (pure functions)": [
+      {
+        "executionId": "f78904c8-187f-4777-aa3a-9eacf48eaadd",
+        "chatSessionId": "sess_d938f875-22c8-4890-81d8-ff1e33ea8d91",
+        "timestamp": 1794241080857
+      }
+    ],
+    "7. Implement the AgentCore Runtime and Memory clients": [
+      {
+        "executionId": "f78904c8-187f-4777-aa3a-9eacf48eaadd",
+        "chatSessionId": "sess_d938f875-22c8-4890-81d8-ff1e33ea8d91",
+        "timestamp": 1794241080955
+      }
+    ],
+    "3. Implement household, membership, and invitation domain logic (pure functions)": [
+      {
+        "executionId": "f78904c8-187f-4777-aa3a-9eacf48eaadd",
+        "chatSessionId": "sess_d938f875-22c8-4890-81d8-ff1e33ea8d91",
+        "timestamp": 1794241217174
+      }
+    ],
+    "8. Implement the Suggestion Service Lambda (ad hoc suggestions)": [
+      {
+        "executionId": "f78904c8-187f-4777-aa3a-9eacf48eaadd",
+        "chatSessionId": "sess_d938f875-22c8-4890-81d8-ff1e33ea8d91",
+        "timestamp": 1794241674909
+      }
+    ],
+    "9. Implement the Plan Service Lambda (weekly/custom plans)": [
+      {
+        "executionId": "f78904c8-187f-4777-aa3a-9eacf48eaadd",
+        "chatSessionId": "sess_d938f875-22c8-4890-81d8-ff1e33ea8d91",
+        "timestamp": 1794241674974
+      }
+    ],
+    "12. Implement the Conversation Service Lambda (chat refinement)": [
+      {
+        "executionId": "f78904c8-187f-4777-aa3a-9eacf48eaadd",
+        "chatSessionId": "sess_d938f875-22c8-4890-81d8-ff1e33ea8d91",
+        "timestamp": 1794241675617
+      }
+    ],
+    "14. Implement the Auth & Membership Service Lambda and Cognito integration": [
+      {
+        "executionId": "f78904c8-187f-4777-aa3a-9eacf48eaadd",
+        "chatSessionId": "sess_d938f875-22c8-4890-81d8-ff1e33ea8d91",
+        "timestamp": 1794241676543
+      }
+    ],
+    "10. Implement the Grocery Service Lambda and regeneration consumer": [
+      {
+        "executionId": "f78904c8-187f-4777-aa3a-9eacf48eaadd",
+        "chatSessionId": "sess_d938f875-22c8-4890-81d8-ff1e33ea8d91",
+        "timestamp": 1794242928387
+      }
+    ],
+    "11. Implement the Preference and Fridge Service Lambdas": [
+      {
+        "executionId": "f78904c8-187f-4777-aa3a-9eacf48eaadd",
+        "chatSessionId": "sess_d938f875-22c8-4890-81d8-ff1e33ea8d91",
+        "timestamp": 1794242928462
+      }
+    ],
+    "13. Implement the Voice Service Lambda (Amazon Transcribe)": [
+      {
+        "executionId": "f78904c8-187f-4777-aa3a-9eacf48eaadd",
+        "chatSessionId": "sess_d938f875-22c8-4890-81d8-ff1e33ea8d91",
+        "timestamp": 1794242928527
+      }
+    ],
+    "15. Implement the API Gateway authorizer and shared-visibility wiring": [
+      {
+        "executionId": "f78904c8-187f-4777-aa3a-9eacf48eaadd",
+        "chatSessionId": "sess_d938f875-22c8-4890-81d8-ff1e33ea8d91",
+        "timestamp": 1794242928879
+      }
+    ],
+    "16. Implement infrastructure-as-code and the invitation-expiry scheduler": [
+      {
+        "executionId": "f78904c8-187f-4777-aa3a-9eacf48eaadd",
+        "chatSessionId": "sess_d938f875-22c8-4890-81d8-ff1e33ea8d91",
+        "timestamp": 1794243798767
+      }
+    ],
+    "19.1 Scaffold `agent/` and implement config, budgets, and the request parser": [
+      {
+        "executionId": "81a156f1-30da-417e-8ed5-822e6f95cbba",
+        "chatSessionId": "sess_d938f875-22c8-4890-81d8-ff1e33ea8d91",
+        "timestamp": 1794245587757
+      },
+      {
+        "executionId": "81a156f1-30da-417e-8ed5-822e6f95cbba",
+        "chatSessionId": "sess_d938f875-22c8-4890-81d8-ff1e33ea8d91",
+        "timestamp": 1794245612398
+      },
+      {
+        "executionId": "81a156f1-30da-417e-8ed5-822e6f95cbba",
+        "chatSessionId": "sess_d938f875-22c8-4890-81d8-ff1e33ea8d91",
+        "timestamp": 1794247345142
+      }
+    ],
+    "19.3 Implement response schemas and prompt builders": [
+      {
+        "executionId": "81a156f1-30da-417e-8ed5-822e6f95cbba",
+        "chatSessionId": "sess_d938f875-22c8-4890-81d8-ff1e33ea8d91",
+        "timestamp": 1794245587813
+      },
+      {
+        "executionId": "81a156f1-30da-417e-8ed5-822e6f95cbba",
+        "chatSessionId": "sess_d938f875-22c8-4890-81d8-ff1e33ea8d91",
+        "timestamp": 1794247714121
+      },
+      {
+        "executionId": "81a156f1-30da-417e-8ed5-822e6f95cbba",
+        "chatSessionId": "sess_d938f875-22c8-4890-81d8-ff1e33ea8d91",
+        "timestamp": 1794248370142
+      }
+    ],
+    "19.6 Implement the `ModelClient` interface and the Claude-on-Bedrock client": [
+      {
+        "executionId": "81a156f1-30da-417e-8ed5-822e6f95cbba",
+        "chatSessionId": "sess_d938f875-22c8-4890-81d8-ff1e33ea8d91",
+        "timestamp": 1794245587850
+      },
+      {
+        "executionId": "81a156f1-30da-417e-8ed5-822e6f95cbba",
+        "chatSessionId": "sess_d938f875-22c8-4890-81d8-ff1e33ea8d91",
+        "timestamp": 1794247714172
+      },
+      {
+        "executionId": "81a156f1-30da-417e-8ed5-822e6f95cbba",
+        "chatSessionId": "sess_d938f875-22c8-4890-81d8-ff1e33ea8d91",
+        "timestamp": 1794248370496
+      }
+    ],
+    "19.8 Implement soft preferences, contract checks, and the generation pipeline": [
+      {
+        "executionId": "81a156f1-30da-417e-8ed5-822e6f95cbba",
+        "chatSessionId": "sess_d938f875-22c8-4890-81d8-ff1e33ea8d91",
+        "timestamp": 1794245587882
+      },
+      {
+        "executionId": "81a156f1-30da-417e-8ed5-822e6f95cbba",
+        "chatSessionId": "sess_d938f875-22c8-4890-81d8-ff1e33ea8d91",
+        "timestamp": 1794248656749
+      },
+      {
+        "executionId": "81a156f1-30da-417e-8ed5-822e6f95cbba",
+        "chatSessionId": "sess_d938f875-22c8-4890-81d8-ff1e33ea8d91",
+        "timestamp": 1794252059257
+      }
+    ],
+    "19.15 Implement the HTTP server, entry point, and ARM64 Dockerfile": [
+      {
+        "executionId": "81a156f1-30da-417e-8ed5-822e6f95cbba",
+        "chatSessionId": "sess_d938f875-22c8-4890-81d8-ff1e33ea8d91",
+        "timestamp": 1794245587912
+      },
+      {
+        "executionId": "81a156f1-30da-417e-8ed5-822e6f95cbba",
+        "chatSessionId": "sess_d938f875-22c8-4890-81d8-ff1e33ea8d91",
+        "timestamp": 1794252071484
+      },
+      {
+        "executionId": "81a156f1-30da-417e-8ed5-822e6f95cbba",
+        "chatSessionId": "sess_d938f875-22c8-4890-81d8-ff1e33ea8d91",
+        "timestamp": 1794252583571
+      }
+    ],
+    "19.17 Lower the plan agent deadline to fit the API Gateway limit": [
+      {
+        "executionId": "81a156f1-30da-417e-8ed5-822e6f95cbba",
+        "chatSessionId": "sess_d938f875-22c8-4890-81d8-ff1e33ea8d91",
+        "timestamp": 1794245587941
+      },
+      {
+        "executionId": "81a156f1-30da-417e-8ed5-822e6f95cbba",
+        "chatSessionId": "sess_d938f875-22c8-4890-81d8-ff1e33ea8d91",
+        "timestamp": 1794247356186
+      },
+      {
+        "executionId": "81a156f1-30da-417e-8ed5-822e6f95cbba",
+        "chatSessionId": "sess_d938f875-22c8-4890-81d8-ff1e33ea8d91",
+        "timestamp": 1794247582556
+      }
+    ],
+    "20.1 Classify and validate convertible audio": [
+      {
+        "executionId": "81a156f1-30da-417e-8ed5-822e6f95cbba",
+        "chatSessionId": "sess_d938f875-22c8-4890-81d8-ff1e33ea8d91",
+        "timestamp": 1794245587971
+      },
+      {
+        "executionId": "81a156f1-30da-417e-8ed5-822e6f95cbba",
+        "chatSessionId": "sess_d938f875-22c8-4890-81d8-ff1e33ea8d91",
+        "timestamp": 1794245612975
+      },
+      {
+        "executionId": "81a156f1-30da-417e-8ed5-822e6f95cbba",
+        "chatSessionId": "sess_d938f875-22c8-4890-81d8-ff1e33ea8d91",
+        "timestamp": 1794247345228
+      }
+    ],
+    "20.2 Implement the `AudioConverter` interface and the ffmpeg converter": [
+      {
+        "executionId": "81a156f1-30da-417e-8ed5-822e6f95cbba",
+        "chatSessionId": "sess_d938f875-22c8-4890-81d8-ff1e33ea8d91",
+        "timestamp": 1794245587997
+      },
+      {
+        "executionId": "81a156f1-30da-417e-8ed5-822e6f95cbba",
+        "chatSessionId": "sess_d938f875-22c8-4890-81d8-ff1e33ea8d91",
+        "timestamp": 1794245613942
+      },
+      {
+        "executionId": "81a156f1-30da-417e-8ed5-822e6f95cbba",
+        "chatSessionId": "sess_d938f875-22c8-4890-81d8-ff1e33ea8d91",
+        "timestamp": 1794247345282
+      }
+    ],
+    "20.5 Integrate conversion into the Voice Service and Lambda": [
+      {
+        "executionId": "81a156f1-30da-417e-8ed5-822e6f95cbba",
+        "chatSessionId": "sess_d938f875-22c8-4890-81d8-ff1e33ea8d91",
+        "timestamp": 1794245588028
+      },
+      {
+        "executionId": "81a156f1-30da-417e-8ed5-822e6f95cbba",
+        "chatSessionId": "sess_d938f875-22c8-4890-81d8-ff1e33ea8d91",
+        "timestamp": 1794247714638
+      },
+      {
+        "executionId": "81a156f1-30da-417e-8ed5-822e6f95cbba",
+        "chatSessionId": "sess_d938f875-22c8-4890-81d8-ff1e33ea8d91",
+        "timestamp": 1794248372074
+      }
+    ],
+    "21.1 Implement Household and member reads": [
+      {
+        "executionId": "81a156f1-30da-417e-8ed5-822e6f95cbba",
+        "chatSessionId": "sess_d938f875-22c8-4890-81d8-ff1e33ea8d91",
+        "timestamp": 1794245588063
+      },
+      {
+        "executionId": "81a156f1-30da-417e-8ed5-822e6f95cbba",
+        "chatSessionId": "sess_d938f875-22c8-4890-81d8-ff1e33ea8d91",
+        "timestamp": 1794245614978
+      },
+      {
+        "executionId": "81a156f1-30da-417e-8ed5-822e6f95cbba",
+        "chatSessionId": "sess_d938f875-22c8-4890-81d8-ff1e33ea8d91",
+        "timestamp": 1794247345329
+      }
+    ],
+    "21.2 Implement plan and grocery-list reads": [
+      {
+        "executionId": "81a156f1-30da-417e-8ed5-822e6f95cbba",
+        "chatSessionId": "sess_d938f875-22c8-4890-81d8-ff1e33ea8d91",
+        "timestamp": 1794245588090
+      },
+      {
+        "executionId": "81a156f1-30da-417e-8ed5-822e6f95cbba",
+        "chatSessionId": "sess_d938f875-22c8-4890-81d8-ff1e33ea8d91",
+        "timestamp": 1794247356247
+      },
+      {
+        "executionId": "81a156f1-30da-417e-8ed5-822e6f95cbba",
+        "chatSessionId": "sess_d938f875-22c8-4890-81d8-ff1e33ea8d91",
+        "timestamp": 1794247582629
+      }
+    ],
+    "21.3 Register the read routes in the HTTP API": [
+      {
+        "executionId": "81a156f1-30da-417e-8ed5-822e6f95cbba",
+        "chatSessionId": "sess_d938f875-22c8-4890-81d8-ff1e33ea8d91",
+        "timestamp": 1794245588120
+      },
+      {
+        "executionId": "81a156f1-30da-417e-8ed5-822e6f95cbba",
+        "chatSessionId": "sess_d938f875-22c8-4890-81d8-ff1e33ea8d91",
+        "timestamp": 1794248379564
+      },
+      {
+        "executionId": "81a156f1-30da-417e-8ed5-822e6f95cbba",
+        "chatSessionId": "sess_d938f875-22c8-4890-81d8-ff1e33ea8d91",
+        "timestamp": 1794248650027
+      }
+    ],
+    "22.1 Create the `web/` workspace": [
+      {
+        "executionId": "81a156f1-30da-417e-8ed5-822e6f95cbba",
+        "chatSessionId": "sess_d938f875-22c8-4890-81d8-ff1e33ea8d91",
+        "timestamp": 1794245588147
+      },
+      {
+        "executionId": "81a156f1-30da-417e-8ed5-822e6f95cbba",
+        "chatSessionId": "sess_d938f875-22c8-4890-81d8-ff1e33ea8d91",
+        "timestamp": 1794245615577
+      },
+      {
+        "executionId": "81a156f1-30da-417e-8ed5-822e6f95cbba",
+        "chatSessionId": "sess_d938f875-22c8-4890-81d8-ff1e33ea8d91",
+        "timestamp": 1794247704930
+      }
+    ],
+    "22.2 Implement runtime config and the typed API client": [
+      {
+        "executionId": "81a156f1-30da-417e-8ed5-822e6f95cbba",
+        "chatSessionId": "sess_d938f875-22c8-4890-81d8-ff1e33ea8d91",
+        "timestamp": 1794245588178
+      },
+      {
+        "executionId": "81a156f1-30da-417e-8ed5-822e6f95cbba",
+        "chatSessionId": "sess_d938f875-22c8-4890-81d8-ff1e33ea8d91",
+        "timestamp": 1794247715795
+      },
+      {
+        "executionId": "81a156f1-30da-417e-8ed5-822e6f95cbba",
+        "chatSessionId": "sess_d938f875-22c8-4890-81d8-ff1e33ea8d91",
+        "timestamp": 1794248373239
+      }
+    ],
+    "22.6 Implement the design system and app shell": [
+      {
+        "executionId": "81a156f1-30da-417e-8ed5-822e6f95cbba",
+        "chatSessionId": "sess_d938f875-22c8-4890-81d8-ff1e33ea8d91",
+        "timestamp": 1794245588205
+      },
+      {
+        "executionId": "81a156f1-30da-417e-8ed5-822e6f95cbba",
+        "chatSessionId": "sess_d938f875-22c8-4890-81d8-ff1e33ea8d91",
+        "timestamp": 1794247716602
+      },
+      {
+        "executionId": "81a156f1-30da-417e-8ed5-822e6f95cbba",
+        "chatSessionId": "sess_d938f875-22c8-4890-81d8-ff1e33ea8d91",
+        "timestamp": 1794248374077
+      }
+    ],
+    "22.8 Implement session, Cognito sign-up, Active_Household selection, and auth screens": [
+      {
+        "executionId": "81a156f1-30da-417e-8ed5-822e6f95cbba",
+        "chatSessionId": "sess_d938f875-22c8-4890-81d8-ff1e33ea8d91",
+        "timestamp": 1794245588236
+      },
+      {
+        "executionId": "81a156f1-30da-417e-8ed5-822e6f95cbba",
+        "chatSessionId": "sess_d938f875-22c8-4890-81d8-ff1e33ea8d91",
+        "timestamp": 1794248657890
+      },
+      {
+        "executionId": "81a156f1-30da-417e-8ed5-822e6f95cbba",
+        "chatSessionId": "sess_d938f875-22c8-4890-81d8-ff1e33ea8d91",
+        "timestamp": 1794252059313
+      }
+    ],
+    "23.1 Implement household screens": [
+      {
+        "executionId": "81a156f1-30da-417e-8ed5-822e6f95cbba",
+        "chatSessionId": "sess_d938f875-22c8-4890-81d8-ff1e33ea8d91",
+        "timestamp": 1794245588263
+      },
+      {
+        "executionId": "81a156f1-30da-417e-8ed5-822e6f95cbba",
+        "chatSessionId": "sess_d938f875-22c8-4890-81d8-ff1e33ea8d91",
+        "timestamp": 1794252071548
+      },
+      {
+        "executionId": "81a156f1-30da-417e-8ed5-822e6f95cbba",
+        "chatSessionId": "sess_d938f875-22c8-4890-81d8-ff1e33ea8d91",
+        "timestamp": 1794252583666
+      }
+    ],
+    "23.3 Implement the Suggest now screen": [
+      {
+        "executionId": "81a156f1-30da-417e-8ed5-822e6f95cbba",
+        "chatSessionId": "sess_d938f875-22c8-4890-81d8-ff1e33ea8d91",
+        "timestamp": 1794245588295
+      },
+      {
+        "executionId": "81a156f1-30da-417e-8ed5-822e6f95cbba",
+        "chatSessionId": "sess_d938f875-22c8-4890-81d8-ff1e33ea8d91",
+        "timestamp": 1794252071590
+      },
+      {
+        "executionId": "81a156f1-30da-417e-8ed5-822e6f95cbba",
+        "chatSessionId": "sess_d938f875-22c8-4890-81d8-ff1e33ea8d91",
+        "timestamp": 1794252583706
+      }
+    ],
+    "23.6 Implement plan screens": [
+      {
+        "executionId": "81a156f1-30da-417e-8ed5-822e6f95cbba",
+        "chatSessionId": "sess_d938f875-22c8-4890-81d8-ff1e33ea8d91",
+        "timestamp": 1794245588322
+      },
+      {
+        "executionId": "81a156f1-30da-417e-8ed5-822e6f95cbba",
+        "chatSessionId": "sess_d938f875-22c8-4890-81d8-ff1e33ea8d91",
+        "timestamp": 1794252071721
+      },
+      {
+        "executionId": "81a156f1-30da-417e-8ed5-822e6f95cbba",
+        "chatSessionId": "sess_d938f875-22c8-4890-81d8-ff1e33ea8d91",
+        "timestamp": 1794252583950
+      }
+    ],
+    "23.7 Implement the grocery screen": [
+      {
+        "executionId": "81a156f1-30da-417e-8ed5-822e6f95cbba",
+        "chatSessionId": "sess_d938f875-22c8-4890-81d8-ff1e33ea8d91",
+        "timestamp": 1794245588354
+      },
+      {
+        "executionId": "81a156f1-30da-417e-8ed5-822e6f95cbba",
+        "chatSessionId": "sess_d938f875-22c8-4890-81d8-ff1e33ea8d91",
+        "timestamp": 1794252590581
+      },
+      {
+        "executionId": "81a156f1-30da-417e-8ed5-822e6f95cbba",
+        "chatSessionId": "sess_d938f875-22c8-4890-81d8-ff1e33ea8d91",
+        "timestamp": 1794252991355
+      }
+    ],
+    "23.8 Implement fridge and preferences screens": [
+      {
+        "executionId": "81a156f1-30da-417e-8ed5-822e6f95cbba",
+        "chatSessionId": "sess_d938f875-22c8-4890-81d8-ff1e33ea8d91",
+        "timestamp": 1794245588383
+      },
+      {
+        "executionId": "81a156f1-30da-417e-8ed5-822e6f95cbba",
+        "chatSessionId": "sess_d938f875-22c8-4890-81d8-ff1e33ea8d91",
+        "timestamp": 1794252591667
+      },
+      {
+        "executionId": "81a156f1-30da-417e-8ed5-822e6f95cbba",
+        "chatSessionId": "sess_d938f875-22c8-4890-81d8-ff1e33ea8d91",
+        "timestamp": 1794252991410
+      }
+    ],
+    "23.9 Implement the chat refinement panel": [
+      {
+        "executionId": "81a156f1-30da-417e-8ed5-822e6f95cbba",
+        "chatSessionId": "sess_d938f875-22c8-4890-81d8-ff1e33ea8d91",
+        "timestamp": 1794245588412
+      },
+      {
+        "executionId": "81a156f1-30da-417e-8ed5-822e6f95cbba",
+        "chatSessionId": "sess_d938f875-22c8-4890-81d8-ff1e33ea8d91",
+        "timestamp": 1794252592551
+      },
+      {
+        "executionId": "81a156f1-30da-417e-8ed5-822e6f95cbba",
+        "chatSessionId": "sess_d938f875-22c8-4890-81d8-ff1e33ea8d91",
+        "timestamp": 1794252991662
+      }
+    ],
+    "23.11 Wire screens into routing and navigation": [
+      {
+        "executionId": "81a156f1-30da-417e-8ed5-822e6f95cbba",
+        "chatSessionId": "sess_d938f875-22c8-4890-81d8-ff1e33ea8d91",
+        "timestamp": 1794245588457
+      },
+      {
+        "executionId": "81a156f1-30da-417e-8ed5-822e6f95cbba",
+        "chatSessionId": "sess_d938f875-22c8-4890-81d8-ff1e33ea8d91",
+        "timestamp": 1794253059570
+      },
+      {
+        "executionId": "81a156f1-30da-417e-8ed5-822e6f95cbba",
+        "chatSessionId": "sess_d938f875-22c8-4890-81d8-ff1e33ea8d91",
+        "timestamp": 1794253442525
+      }
+    ],
+    "24.1 Implement the PCM encoder and AudioWorklet": [
+      {
+        "executionId": "81a156f1-30da-417e-8ed5-822e6f95cbba",
+        "chatSessionId": "sess_d938f875-22c8-4890-81d8-ff1e33ea8d91",
+        "timestamp": 1794245588487
+      },
+      {
+        "executionId": "81a156f1-30da-417e-8ed5-822e6f95cbba",
+        "chatSessionId": "sess_d938f875-22c8-4890-81d8-ff1e33ea8d91",
+        "timestamp": 1794248380252
+      },
+      {
+        "executionId": "81a156f1-30da-417e-8ed5-822e6f95cbba",
+        "chatSessionId": "sess_d938f875-22c8-4890-81d8-ff1e33ea8d91",
+        "timestamp": 1794248650112
+      }
+    ],
+    "24.3 Implement the recorder state machine": [
+      {
+        "executionId": "81a156f1-30da-417e-8ed5-822e6f95cbba",
+        "chatSessionId": "sess_d938f875-22c8-4890-81d8-ff1e33ea8d91",
+        "timestamp": 1794245588514
+      },
+      {
+        "executionId": "81a156f1-30da-417e-8ed5-822e6f95cbba",
+        "chatSessionId": "sess_d938f875-22c8-4890-81d8-ff1e33ea8d91",
+        "timestamp": 1794248658696
+      },
+      {
+        "executionId": "81a156f1-30da-417e-8ed5-822e6f95cbba",
+        "chatSessionId": "sess_d938f875-22c8-4890-81d8-ff1e33ea8d91",
+        "timestamp": 1794252059715
+      }
+    ],
+    "24.5 Implement the voice button and transcript dialog and integrate them": [
+      {
+        "executionId": "81a156f1-30da-417e-8ed5-822e6f95cbba",
+        "chatSessionId": "sess_d938f875-22c8-4890-81d8-ff1e33ea8d91",
+        "timestamp": 1794245588545
+      },
+      {
+        "executionId": "81a156f1-30da-417e-8ed5-822e6f95cbba",
+        "chatSessionId": "sess_d938f875-22c8-4890-81d8-ff1e33ea8d91",
+        "timestamp": 1794253446728
+      },
+      {
+        "executionId": "81a156f1-30da-417e-8ed5-822e6f95cbba",
+        "chatSessionId": "sess_d938f875-22c8-4890-81d8-ff1e33ea8d91",
+        "timestamp": 1794254117010
+      }
+    ],
+    "25.1 Build the Suggestion_Agent image and create the runtime by default": [
+      {
+        "executionId": "81a156f1-30da-417e-8ed5-822e6f95cbba",
+        "chatSessionId": "sess_d938f875-22c8-4890-81d8-ff1e33ea8d91",
+        "timestamp": 1794245588573
+      },
+      {
+        "executionId": "81a156f1-30da-417e-8ed5-822e6f95cbba",
+        "chatSessionId": "sess_d938f875-22c8-4890-81d8-ff1e33ea8d91",
+        "timestamp": 1794253060266
+      },
+      {
+        "executionId": "81a156f1-30da-417e-8ed5-822e6f95cbba",
+        "chatSessionId": "sess_d938f875-22c8-4890-81d8-ff1e33ea8d91",
+        "timestamp": 1794253442788
+      }
+    ],
+    "25.2 Package the Voice Lambda as a container image with ffmpeg": [
+      {
+        "executionId": "81a156f1-30da-417e-8ed5-822e6f95cbba",
+        "chatSessionId": "sess_d938f875-22c8-4890-81d8-ff1e33ea8d91",
+        "timestamp": 1794245588603
+      },
+      {
+        "executionId": "81a156f1-30da-417e-8ed5-822e6f95cbba",
+        "chatSessionId": "sess_d938f875-22c8-4890-81d8-ff1e33ea8d91",
+        "timestamp": 1794248659488
+      },
+      {
+        "executionId": "81a156f1-30da-417e-8ed5-822e6f95cbba",
+        "chatSessionId": "sess_d938f875-22c8-4890-81d8-ff1e33ea8d91",
+        "timestamp": 1794252061089
+      }
+    ],
+    "25.3 Host the Client_App on S3 and CloudFront": [
+      {
+        "executionId": "81a156f1-30da-417e-8ed5-822e6f95cbba",
+        "chatSessionId": "sess_d938f875-22c8-4890-81d8-ff1e33ea8d91",
+        "timestamp": 1794245588629
+      },
+      {
+        "executionId": "81a156f1-30da-417e-8ed5-822e6f95cbba",
+        "chatSessionId": "sess_d938f875-22c8-4890-81d8-ff1e33ea8d91",
+        "timestamp": 1794252072614
+      },
+      {
+        "executionId": "81a156f1-30da-417e-8ed5-822e6f95cbba",
+        "chatSessionId": "sess_d938f875-22c8-4890-81d8-ff1e33ea8d91",
+        "timestamp": 1794252584992
+      }
+    ],
+    "25.4 Update scripts and infrastructure documentation": [
+      {
+        "executionId": "81a156f1-30da-417e-8ed5-822e6f95cbba",
+        "chatSessionId": "sess_d938f875-22c8-4890-81d8-ff1e33ea8d91",
+        "timestamp": 1794245588657
+      },
+      {
+        "executionId": "81a156f1-30da-417e-8ed5-822e6f95cbba",
+        "chatSessionId": "sess_d938f875-22c8-4890-81d8-ff1e33ea8d91",
+        "timestamp": 1794253447627
+      },
+      {
+        "executionId": "81a156f1-30da-417e-8ed5-822e6f95cbba",
+        "chatSessionId": "sess_d938f875-22c8-4890-81d8-ff1e33ea8d91",
+        "timestamp": 1794254118100
+      }
+    ],
+    "26. Final checkpoint - backend, agent, and Client_App suites": [
+      {
+        "executionId": "81a156f1-30da-417e-8ed5-822e6f95cbba",
+        "chatSessionId": "sess_d938f875-22c8-4890-81d8-ff1e33ea8d91",
+        "timestamp": 1794245588687
+      },
+      {
+        "executionId": "81a156f1-30da-417e-8ed5-822e6f95cbba",
+        "chatSessionId": "sess_d938f875-22c8-4890-81d8-ff1e33ea8d91",
+        "timestamp": 1794254122165
+      },
+      {
+        "executionId": "81a156f1-30da-417e-8ed5-822e6f95cbba",
+        "chatSessionId": "sess_d938f875-22c8-4890-81d8-ff1e33ea8d91",
+        "timestamp": 1794254181154
+      }
+    ],
+    "20. Implement server-side audio conversion in the Voice Service": [
+      {
+        "executionId": "81a156f1-30da-417e-8ed5-822e6f95cbba",
+        "chatSessionId": "sess_d938f875-22c8-4890-81d8-ff1e33ea8d91",
+        "timestamp": 1794248372114
+      }
+    ],
+    "21. Add read endpoints required by the Client_App": [
+      {
+        "executionId": "81a156f1-30da-417e-8ed5-822e6f95cbba",
+        "chatSessionId": "sess_d938f875-22c8-4890-81d8-ff1e33ea8d91",
+        "timestamp": 1794248650068
+      }
+    ],
+    "22. Scaffold the Client_App, API client, design system, and authentication": [
+      {
+        "executionId": "81a156f1-30da-417e-8ed5-822e6f95cbba",
+        "chatSessionId": "sess_d938f875-22c8-4890-81d8-ff1e33ea8d91",
+        "timestamp": 1794252059344
+      }
+    ],
+    "19. Implement the Suggestion_Agent container (`agent/`)": [
+      {
+        "executionId": "81a156f1-30da-417e-8ed5-822e6f95cbba",
+        "chatSessionId": "sess_d938f875-22c8-4890-81d8-ff1e33ea8d91",
+        "timestamp": 1794252583616
+      }
+    ],
+    "23. Implement the Client_App screens": [
+      {
+        "executionId": "81a156f1-30da-417e-8ed5-822e6f95cbba",
+        "chatSessionId": "sess_d938f875-22c8-4890-81d8-ff1e33ea8d91",
+        "timestamp": 1794253442574
+      }
+    ],
+    "24. Implement voice capture and encoding in the browser": [
+      {
+        "executionId": "81a156f1-30da-417e-8ed5-822e6f95cbba",
+        "chatSessionId": "sess_d938f875-22c8-4890-81d8-ff1e33ea8d91",
+        "timestamp": 1794254117062
+      }
+    ],
+    "25. Wire the agent image, voice container, and web hosting into CDK": [
+      {
+        "executionId": "81a156f1-30da-417e-8ed5-822e6f95cbba",
+        "chatSessionId": "sess_d938f875-22c8-4890-81d8-ff1e33ea8d91",
+        "timestamp": 1794254118146
+      }
+    ]
+  }
+}

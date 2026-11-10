@@ -1,0 +1,14 @@
+{
+  "app": "node dist/infra/bin/sous.js",
+  "output": "cdk.out",
+  "watch": {
+    "include": ["src/**", "infra/**"],
+    "exclude": ["**/*.test.ts", "dist", "cdk.out", "node_modules"]
+  },
+  "context": {
+    "agentRuntimeMode": "asset",
+    "agentModelId": "global.anthropic.claude-haiku-4-5-20251001-v1:0",
+    "@aws-cdk/core:checkSecretUsage": true,
+    "@aws-cdk/aws-iam:minimizePolicies": true
+  }
+}

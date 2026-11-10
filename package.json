@@ -1,0 +1,44 @@
+{
+  "name": "sous",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Sous: AWS-native meal planner with a Bedrock AgentCore Suggestion_Agent",
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
+  "workspaces": [
+    "web"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest --run",
+    "test:watch": "vitest",
+    "synth": "npm run build && npm run build:web && cdk synth --quiet",
+    "build:web": "npm run build -w web",
+    "test:web": "npm test -w web",
+    "test:all": "npm test && npm run test:web"
+  },
+  "dependencies": {
+    "@aws-sdk/client-bedrock-agentcore": "^3.1164.0",
+    "@aws-sdk/client-bedrock-runtime": "^3.1164.0",
+    "@aws-sdk/client-cognito-identity-provider": "^3.1164.0",
+    "@aws-sdk/client-dynamodb": "^3.1164.0",
+    "@aws-sdk/client-eventbridge": "^3.1164.0",
+    "@aws-sdk/client-s3": "^3.1164.0",
+    "@aws-sdk/client-transcribe": "^3.1164.0",
+    "@aws-sdk/client-transcribe-streaming": "^3.1164.0",
+    "@aws-sdk/lib-dynamodb": "^3.1164.0"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.6",
+    "aws-cdk": "^2.1148.0",
+    "aws-cdk-lib": "^2.275.0",
+    "constructs": "^10.8.1",
+    "esbuild": "^0.28.2",
+    "fast-check": "^4.10.2",
+    "typescript": "^7.0.2",
+    "vitest": "^5.1.0"
+  }
+}

@@ -1,0 +1,9 @@
+node_modules/
+dist/
+coverage/
+*.log
+.env
+cdk.out/
+web/dist/
+web/dev-dist/
+web/public/config.json
