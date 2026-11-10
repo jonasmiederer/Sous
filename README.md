@@ -69,6 +69,13 @@ npx cdk deploy Sous
 
 After the first deploy, set `requireMMDSV2` on the agent runtime. AgentCore rejects invocations without it, and CloudFormation cannot set it yet. The exact commands are in [infra/README.md](infra/README.md#post-deploy-require-mmdsv2-on-the-agent-runtime).
 
+### Releases and CI/CD
+Versions follow [semver](https://semver.org). `package.json` and `web/package.json` share one version.
+- `.github/workflows/ci.yml` runs typecheck, build, tests and `cdk synth` on pull requests and pushes to `main`.
+- `.github/workflows/release.yml` is run manually (Actions > "Release and deploy"). Pick `patch`, `minor` or `major`: it tests, bumps the version (`scripts/bump-version.mjs`), commits, tags `vX.Y.Z`, creates a GitHub release and runs `cdk deploy Sous` with a `Version` stack tag. `none` deploys without bumping.
+
+One-time setup: create a GitHub environment named `production`, add the variables `AWS_DEPLOY_ROLE_ARN` (an IAM role trusting GitHub OIDC for this repo, with permission to assume the CDK bootstrap roles) and `AWS_REGION`. If `main` is branch-protected, allow `github-actions[bot]` to push the version commit. The `requireMMDSV2` post-deploy step still applies after the first deploy.
+
 Useful context keys (`cdk.json` or `-c key=value`): `agentRuntimeMode`, `agentContainerUri`, `agentModelId`, `memoryPreferenceStrategyId`, `corsAllowOrigins`. All are documented in [infra/README.md](infra/README.md).
 
 ## Notes
