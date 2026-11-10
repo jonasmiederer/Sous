@@ -1,10 +1,17 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Sous">
   <rect width="512" height="512" rx="112.6" fill="#2f6b3a"/>
-  <g fill="#fff" transform="translate(256 256) scale(0.78) translate(-256 -256)">
-    <path d="M343.7 101.8 A97.3 97.3 0 0 0 240 205.4 A97.3 97.3 0 0 0 343.7 101.8 Z"/>
-    <rect x="246.8" y="184.3" width="18.4" height="87"/>
-    <rect x="81.9" y="266.2" width="348.2" height="28.2"/>
-    <path d="M102.4 281.6 A153.6 153.6 0 0 0 409.6 281.6 Z"/>
-    <rect x="194.6" y="430.1" width="122.9" height="25.6"/>
+  <g transform="translate(256 256) scale(0.78) translate(-256 -256) translate(0 -5)">
+    <g fill="#fbf1e0">
+      <circle cx="113" cy="205" r="82"/>
+      <circle cx="399" cy="205" r="82"/>
+      <circle cx="256" cy="128" r="102"/>
+      <path d="M102 195 H410 L389 410 H123 Z"/>
+    </g>
+    <g stroke="#b4c0a6" stroke-width="14" stroke-linecap="round" fill="none">
+      <path d="M197 256 L187 379"/>
+      <path d="M256 256 V379"/>
+      <path d="M315 256 L325 379"/>
+    </g>
+    <rect x="97" y="399" width="318" height="77" rx="15" fill="#f5b94e"/>
   </g>
 </svg>
