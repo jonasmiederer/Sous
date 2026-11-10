@@ -61,6 +61,19 @@ export type AgentRuntimeConfig =
   /** Use an existing runtime whose ARN is supplied as the `AgentRuntimeArn` stack parameter at deploy time. */
   | { kind: 'parameter' };
 
+export interface CrossAccountModelConfig {
+  /** IAM role in the model account that allows Bedrock invocation and trusts the agent runtime role. */
+  roleArn: string;
+  /** Claude model or inference profile id available in the model account. */
+  modelId: string;
+  /** Bedrock Region in the model account. Defaults to the stack Region. */
+  region?: string;
+  /** Optional ExternalId required by the role's trust policy. */
+  externalId?: string;
+}
+
+const IAM_ROLE_ARN = /^arn:aws[a-z-]*:iam::\d{12}:role\/.+$/;
+
 export interface SousStackProps extends StackProps {
   /** Defaults to `{ kind: 'asset' }`. */
   agentRuntime?: AgentRuntimeConfig;
@@ -70,6 +83,14 @@ export interface SousStackProps extends StackProps {
    * Ignored in `parameter` mode, where the stack does not create the runtime.
    */
   agentModelId?: string;
+  /**
+   * Optional: call the model in another AWS account. When set, the agent
+   * assumes `roleArn` for Bedrock calls and uses `modelId` (in `region`,
+   * default: this stack's Region) instead of `agentModelId`. When omitted, the
+   * agent calls `agentModelId` (default Haiku 4.5) in this account.
+   * Ignored in `parameter` mode.
+   */
+  crossAccountModel?: CrossAccountModelConfig;
   /** Long-term preference strategy id of the AgentCore Memory, once known (not exposed by CloudFormation). */
   memoryPreferenceStrategyId?: string;
   /**
@@ -169,16 +190,18 @@ const AGENT_IMAGE_EXCLUDE = [
 ];
 
 /**
- * Claude Haiku 5.5 through the global cross-Region inference profile, chosen
- * for latency (design.md, "Model"). Haiku 5.5 has no in-Region on-demand id; a
- * geo profile (us., ca., eu., au., jp.) keeps requests in one geography. The
- * agent sends `thinking: disabled` for this model (adaptive thinking is on by
- * default). Source:
- * https://docs.aws.amazon.com/bedrock/latest/userguide/model-card-anthropic-claude-haiku-5-5.html
+ * Default model: Claude Haiku 4.5 through the global cross-Region inference
+ * profile, used when no cross-account model is configured. Haiku 5.5 (the
+ * design.md "Model" choice) is not enabled in every account, so it is only
+ * used through `crossAccountModel`. The agent sends `thinking: disabled` for
+ * Haiku 5.5 only.
  */
-export const DEFAULT_AGENT_MODEL_ID = 'global.anthropic.claude-haiku-5-5';
-/** An Anthropic Claude foundation model id, optionally prefixed by an inference-profile scope. */
-const CLAUDE_MODEL_ID = /^(?:[a-z]{2,6}\.)?anthropic\.claude-[a-z0-9.-]+(?::\d+)?$/;
+export const DEFAULT_AGENT_MODEL_ID = 'global.anthropic.claude-haiku-4-5-20251001-v1:0';
+/**
+ * An Anthropic Claude or Amazon Nova foundation model id, optionally prefixed
+ * by an inference-profile scope. (Name kept for history; Nova is allowed for testing.)
+ */
+const CLAUDE_MODEL_ID = /^(?:[a-z]{2,6}\.)?(?:anthropic\.claude-|amazon\.nova-)[a-z0-9.-]+(?::\d+)?$/;
 
 const ECR_URI = /^(\d{12})\.dkr\.ecr\.([a-z0-9-]+)\.amazonaws\.com(?:\.cn)?\/([a-z0-9._/-]+)[:@].+$/;
 
@@ -314,7 +337,8 @@ export class SousStack extends Stack {
       ],
     });
     const agentRuntimeArn = this.agentRuntime(props.agentRuntime ?? { kind: 'asset' }, memory, {
-      modelId: props.agentModelId ?? DEFAULT_AGENT_MODEL_ID,
+      modelId: props.crossAccountModel?.modelId ?? props.agentModelId ?? DEFAULT_AGENT_MODEL_ID,
+      ...(props.crossAccountModel ? { crossAccountModel: props.crossAccountModel } : {}),
       ...(props.memoryPreferenceStrategyId ? { memoryPreferenceStrategyId: props.memoryPreferenceStrategyId } : {}),
     });
 
@@ -692,7 +716,7 @@ export class SousStack extends Stack {
   private agentRuntime(
     config: AgentRuntimeConfig,
     memory: agentcore.CfnMemory,
-    agent: { modelId: string; memoryPreferenceStrategyId?: string },
+    agent: { modelId: string; crossAccountModel?: CrossAccountModelConfig; memoryPreferenceStrategyId?: string },
   ): string {
     if (config.kind === 'parameter') {
       return new CfnParameter(this, 'AgentRuntimeArn', {
@@ -702,7 +726,14 @@ export class SousStack extends Stack {
       }).valueAsString;
     }
     if (!CLAUDE_MODEL_ID.test(agent.modelId)) {
-      throw new Error(`agentModelId must be an Anthropic Claude model or inference profile id, got "${agent.modelId}"`);
+      throw new Error(
+        `agentModelId must be an Anthropic Claude or Amazon Nova model or inference profile id, got "${agent.modelId}"`,
+      );
+    }
+
+    const cross = agent.crossAccountModel;
+    if (cross && !IAM_ROLE_ARN.test(cross.roleArn)) {
+      throw new Error(`crossAccountModel.roleArn must be an IAM role ARN, got "${cross.roleArn}"`);
     }
 
     const role = new iam.Role(this, 'AgentRuntimeRole', {
@@ -745,15 +776,23 @@ export class SousStack extends Stack {
     // Anthropic Claude only. Cross-Region (geo and global) inference profiles
     // route to foundation models in other Regions, so the foundation-model
     // resource keeps a Region wildcard (global profiles use an empty Region).
-    role.addToPolicy(
-      new iam.PolicyStatement({
-        actions: ['bedrock:InvokeModel', 'bedrock:InvokeModelWithResponseStream'],
-        resources: [
-          `arn:${this.partition}:bedrock:*::foundation-model/anthropic.claude-*`,
-          `arn:${this.partition}:bedrock:${this.region}:${this.account}:inference-profile/*anthropic.claude-*`,
-        ],
-      }),
-    );
+    if (cross) {
+      // Model calls go through the role in the model account; that account's
+      // role carries the Bedrock permissions.
+      role.addToPolicy(new iam.PolicyStatement({ actions: ['sts:AssumeRole'], resources: [cross.roleArn] }));
+    } else {
+      role.addToPolicy(
+        new iam.PolicyStatement({
+          actions: ['bedrock:InvokeModel', 'bedrock:InvokeModelWithResponseStream'],
+          resources: [
+            `arn:${this.partition}:bedrock:*::foundation-model/anthropic.claude-*`,
+            `arn:${this.partition}:bedrock:${this.region}:${this.account}:inference-profile/*anthropic.claude-*`,
+            `arn:${this.partition}:bedrock:*::foundation-model/amazon.nova-*`,
+            `arn:${this.partition}:bedrock:${this.region}:${this.account}:inference-profile/*amazon.nova-*`,
+          ],
+        }),
+      );
+    }
     // The agent only reads Memory: short-term turns are written by the
     // orchestration Lambdas (Requirement 12.11).
     role.addToPolicy(
@@ -786,7 +825,9 @@ export class SousStack extends Stack {
         MEMORY_ID: memory.attrMemoryId,
         ...(agent.memoryPreferenceStrategyId ? { MEMORY_PREFERENCE_STRATEGY_ID: agent.memoryPreferenceStrategyId } : {}),
         MODEL_ID: agent.modelId,
-        BEDROCK_REGION: this.region,
+        BEDROCK_REGION: cross?.region ?? this.region,
+        ...(cross ? { MODEL_ROLE_ARN: cross.roleArn } : {}),
+        ...(cross?.externalId ? { MODEL_ROLE_EXTERNAL_ID: cross.externalId } : {}),
       },
     });
     // The role's policy (image pull, model, memory, logs) must exist before the runtime starts.

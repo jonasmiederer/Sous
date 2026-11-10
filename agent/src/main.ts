@@ -26,7 +26,18 @@ function start(config: AgentConfig): void {
     memoryId: config.memoryId,
     ...(config.memoryPreferenceStrategyId !== undefined ? { preferenceStrategyId: config.memoryPreferenceStrategyId } : {}),
   });
-  const model = new BedrockConverseModelClient({ modelId: config.modelId, region: config.bedrockRegion });
+  const model = new BedrockConverseModelClient({
+    modelId: config.modelId,
+    region: config.bedrockRegion,
+    ...(config.modelRoleArn !== undefined
+      ? {
+          assumeRole: {
+            roleArn: config.modelRoleArn,
+            ...(config.modelRoleExternalId !== undefined ? { externalId: config.modelRoleExternalId } : {}),
+          },
+        }
+      : {}),
+  });
   const server = createServer({ model, softPreferences, config });
 
   server.listen(config.port, '0.0.0.0', () => {

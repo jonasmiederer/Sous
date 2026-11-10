@@ -19,9 +19,11 @@
  * - the request's AbortSignal fired (before or during the call) -> `aborted`
  */
 
+import { fromTemporaryCredentials } from '@aws-sdk/credential-providers';
 import {
   BedrockRuntimeClient,
   ConverseCommand,
+  type BedrockRuntimeClientConfig,
   type ContentBlock,
   type ConverseCommandInput,
   type ConverseCommandOutput,
@@ -61,8 +63,31 @@ export interface BedrockConverseModelClientConfig {
   modelId: string;
   /** Bedrock region (`BEDROCK_REGION`); used only when `sender` is omitted. */
   region?: string;
+  /**
+   * Optional cross-account role (`MODEL_ROLE_ARN`) assumed for Bedrock calls;
+   * credentials are refreshed automatically. Used only when `sender` is omitted.
+   */
+  assumeRole?: { roleArn: string; externalId?: string };
   /** Defaults to a new BedrockRuntimeClient for `region`. */
   sender?: ConverseSender;
+}
+
+/** Client options for `BedrockRuntimeClient`, adding assumed-role credentials when configured. */
+export function bedrockClientOptions(
+  config: Pick<BedrockConverseModelClientConfig, 'region' | 'assumeRole'>,
+): BedrockRuntimeClientConfig {
+  const options: BedrockRuntimeClientConfig = config.region ? { region: config.region } : {};
+  if (config.assumeRole) {
+    options.credentials = fromTemporaryCredentials({
+      params: {
+        RoleArn: config.assumeRole.roleArn,
+        RoleSessionName: 'sous-suggestion-agent',
+        ...(config.assumeRole.externalId ? { ExternalId: config.assumeRole.externalId } : {}),
+      },
+      ...(config.region ? { clientConfig: { region: config.region } } : {}),
+    });
+  }
+  return options;
 }
 
 export class BedrockConverseModelClient implements ModelClient {
@@ -70,8 +95,7 @@ export class BedrockConverseModelClient implements ModelClient {
 
   constructor(private readonly config: BedrockConverseModelClientConfig) {
     if (!config.modelId) throw new Error('modelId is required');
-    this.sender =
-      config.sender ?? (new BedrockRuntimeClient(config.region ? { region: config.region } : {}) as ConverseSender);
+    this.sender = config.sender ?? (new BedrockRuntimeClient(bedrockClientOptions(config)) as ConverseSender);
   }
 
   /** The exact Converse input for a request (exposed for testing). */

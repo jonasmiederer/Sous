@@ -26,6 +26,14 @@ export interface AgentConfig {
   bedrockRegion: string;
   memoryId: string;
   memoryPreferenceStrategyId?: string;
+  /**
+   * Optional IAM role in another AWS account (`MODEL_ROLE_ARN`). When set, Bedrock
+   * is called with credentials from assuming this role; otherwise with the
+   * runtime's own credentials.
+   */
+  modelRoleArn?: string;
+  /** Optional ExternalId for assuming `modelRoleArn` (`MODEL_ROLE_EXTERNAL_ID`). */
+  modelRoleExternalId?: string;
   budgetsMs: Record<AgentMode, number>;
   /** Suggestions requested from the model in ad hoc mode, 1–3. */
   adHocSuggestionCount: number;
@@ -85,5 +93,14 @@ export function loadConfig(env: Env = process.env): AgentConfig {
   };
   const strategyId = nonEmpty(env, 'MEMORY_PREFERENCE_STRATEGY_ID');
   if (strategyId !== undefined) config.memoryPreferenceStrategyId = strategyId;
+  const modelRoleArn = nonEmpty(env, 'MODEL_ROLE_ARN');
+  if (modelRoleArn !== undefined) {
+    if (!/^arn:aws[a-z-]*:iam::\d{12}:role\/.+$/.test(modelRoleArn)) {
+      throw new ConfigError('MODEL_ROLE_ARN must be an IAM role ARN.');
+    }
+    config.modelRoleArn = modelRoleArn;
+    const externalId = nonEmpty(env, 'MODEL_ROLE_EXTERNAL_ID');
+    if (externalId !== undefined) config.modelRoleExternalId = externalId;
+  }
   return config;
 }

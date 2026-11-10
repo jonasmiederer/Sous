@@ -255,6 +255,14 @@ export class SuggestionService {
     if (invocation === TIMED_OUT) return timeout(this.deadlineMs, sessionId);
     if (!invocation.ok) {
       if (invocation.error.kind === 'timeout') return timeout(this.deadlineMs, sessionId);
+      // Surface the real cause in CloudWatch; the client only sees a generic reason.
+      const cause = invocation.error.kind === 'invocation_failed' ? invocation.error.cause : undefined;
+      console.error('Suggestion agent invocation failed', {
+        kind: invocation.error.kind,
+        message: invocation.error.message,
+        errorName: cause instanceof Error ? cause.name : undefined,
+        sessionId,
+      });
       return noSuggestion(
         invocation.error.kind === 'invalid_response' ? 'agent_invalid_response' : 'agent_unavailable',
         sessionId,
