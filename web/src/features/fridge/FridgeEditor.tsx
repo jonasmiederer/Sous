@@ -37,6 +37,7 @@ import {
   type FridgeRow,
 } from './fridgeRows';
 
+/** What the editor hands to the voice button rendered next to the quick-add field. */
 export interface FridgeVoiceSlot {
   targetOperation: Extract<VoiceTargetOperation, { type: 'fridge' }>;
   disabled: boolean;
@@ -50,6 +51,7 @@ export interface FridgeEditorProps {
 
 const FRIDGE_TARGET = { type: 'fridge' } as const;
 
+/** Page shell: loads the fridge and renders `FridgeForm` once data is available. */
 export function FridgeEditor({ renderVoiceAction }: FridgeEditorProps) {
   const fridge = useFridge();
   return (
@@ -65,10 +67,15 @@ export function FridgeEditor({ renderVoiceAction }: FridgeEditorProps) {
   );
 }
 
+/** Items of the stored inventory; a household that never saved one has none. */
 function itemsOf(data: GetFridgeResponse): Ingredient[] {
   return data.inventory ? data.inventory.items : [];
 }
 
+/**
+ * Editable copy of the server inventory. `baseline` is the signature of the
+ * last server state we adopted; `dirty` means the rows differ from it.
+ */
 function FridgeForm({ data, renderVoiceAction }: { data: GetFridgeResponse; renderVoiceAction?: FridgeEditorProps['renderVoiceAction'] }) {
   const api = useApi();
   const toast = useToast();
@@ -83,6 +90,7 @@ function FridgeForm({ data, renderVoiceAction }: { data: GetFridgeResponse; rend
   const [dropped, setDropped] = useState<string[]>([]);
   const dirty = rowsSignature(rows) !== baseline;
 
+  /** Replaces the editable rows with server data and resets the dirty baseline. */
   function adopt(next: GetFridgeResponse) {
     const nextRows = rowsFromItems(itemsOf(next));
     setRows(nextRows);
@@ -106,10 +114,12 @@ function FridgeForm({ data, renderVoiceAction }: { data: GetFridgeResponse; rend
   const canSave = hasValidRow(rows) || clearing;
   const atLimit = rows.length >= MAX_FRIDGE_ROWS;
 
+  /** Patches one row, identified by its stable client-side key. */
   function update(key: string, patch: Partial<FridgeRow>) {
     setRows((current) => current.map((r) => (r.key === key ? { ...r, ...patch } : r)));
   }
 
+  /** Parses text like "6 eggs" into a new row; unparseable input is ignored. */
   function addQuick(event: FormEvent) {
     event.preventDefault();
     const parsed = parseQuickAdd(quickAdd);
@@ -118,6 +128,11 @@ function FridgeForm({ data, renderVoiceAction }: { data: GetFridgeResponse; rend
     setQuickAdd('');
   }
 
+  /**
+   * Saves the whole inventory. The server reports invalid rows by index into
+   * the submitted list (`droppedIndexes`); we map them back to names so the
+   * user can see what was left out.
+   */
   function onSave(event: FormEvent) {
     event.preventDefault();
     setAttempted(true);
@@ -235,6 +250,7 @@ function FridgeForm({ data, renderVoiceAction }: { data: GetFridgeResponse; rend
   );
 }
 
+/** Single-line "6 eggs" input; Enter or the plus button adds a row. */
 function QuickAddField({
   value,
   onChange,
@@ -273,6 +289,11 @@ function QuickAddField({
   );
 }
 
+/**
+ * One editable item (name, amount, unit). Labels are screen-reader only and
+ * include the item name. Problems show only after the first save attempt, and
+ * fully blank rows never count as a problem (they are dropped on save).
+ */
 function RowEditor({
   row,
   index,
@@ -291,6 +312,7 @@ function RowEditor({
   const visibleProblem = showProblem ? problem : null;
   const label = row.name.trim() || `item ${index + 1}`;
   const errorId = `${id}-error`;
+  // Keep a non-canonical unit (e.g. from older data) selectable so it isn't silently changed.
   const unitOptions = isCanonicalUnit(row.unit) ? CANONICAL_UNITS : [...CANONICAL_UNITS, row.unit];
   return (
     <div className="rounded-2xl border border-border bg-surface p-3 shadow-card">

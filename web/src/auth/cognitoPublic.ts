@@ -8,16 +8,24 @@
  * No AWS SDK is bundled.
  */
 
+/** The operation is selected with the `x-amz-target` header: prefix + operation name. */
 export const COGNITO_TARGET_PREFIX = 'AWSCognitoIdentityProviderService.';
 export const COGNITO_CONTENT_TYPE = 'application/x-amz-json-1.1';
+/** Per-request timeout before the call fails with `REQUEST_TIMEOUT`. */
 export const COGNITO_TIMEOUT_MS = 10_000;
 
+/** The subset of Cognito operations this client uses. */
 export type CognitoOperation = 'SignUp' | 'ConfirmSignUp' | 'ResendConfirmationCode' | 'InitiateAuth' | 'RevokeToken';
 
+/** Regional Cognito Identity Provider endpoint. */
 export function cognitoEndpoint(region: string): string {
   return `https://cognito-idp.${region}.amazonaws.com/`;
 }
 
+/**
+ * User-facing text per exception name. `NETWORK_ERROR` and `REQUEST_TIMEOUT`
+ * are client-side codes, not Cognito exceptions.
+ */
 const COGNITO_MESSAGES: Record<string, string> = {
   UsernameExistsException: 'An account with this email already exists. Sign in, or confirm it with the code we emailed you.',
   InvalidPasswordException: 'Choose a password of 8 to 128 characters.',
@@ -48,6 +56,7 @@ export class CognitoError extends Error {
     this.status = status;
   }
 
+  /** Safe to show to the user; falls back to a generic message for unknown codes. */
   get userMessage(): string {
     return COGNITO_MESSAGES[this.code] ?? COGNITO_GENERIC_MESSAGE;
   }
@@ -67,6 +76,7 @@ export interface SignUpResult {
   destination?: string;
 }
 
+/** Methods reject with `CognitoError`. */
 export interface CognitoPublicClient {
   signUp(email: string, password: string): Promise<SignUpResult>;
   confirmSignUp(email: string, code: string): Promise<void>;
@@ -77,12 +87,19 @@ export interface CognitoPublicClient {
 
 export interface CognitoPublicClientOptions {
   region: string;
+  /** Public app client id (no secret). */
   clientId: string;
+  /** Injectable for tests; defaults to the global `fetch`. */
   fetch?: typeof fetch;
+  /** Defaults to `COGNITO_TIMEOUT_MS`. */
   timeoutMs?: number;
 }
 
-/** `__type` may be `Name` or `prefix#Name`. */
+/**
+ * Extracts the exception name from an error response, preferring the body's
+ * `__type` over the `x-amzn-errortype` header. Either may be `Name`,
+ * `prefix#Name`, or `Name:details`; only `Name` is returned.
+ */
 function exceptionName(value: unknown, header: string | null): string | undefined {
   const raw = (typeof value === 'object' && value !== null ? (value as { __type?: unknown }).__type : undefined) ?? header;
   if (typeof raw !== 'string' || raw === '') return undefined;
@@ -90,12 +107,18 @@ function exceptionName(value: unknown, header: string | null): string | undefine
   return afterHash.split(':')[0]?.trim() || undefined;
 }
 
+/** Creates a client that talks to Cognito over plain `fetch`, with a timeout on every call. */
 export function createCognitoPublicClient(options: CognitoPublicClientOptions): CognitoPublicClient {
   const fetchImpl = options.fetch ?? globalThis.fetch.bind(globalThis);
   const endpoint = cognitoEndpoint(options.region);
   const timeoutMs = options.timeoutMs ?? COGNITO_TIMEOUT_MS;
   const clientId = options.clientId;
 
+  /**
+   * POSTs one Cognito operation and returns its parsed JSON body. Throws
+   * `CognitoError` for network failures/timeouts (status 0), non-2xx
+   * responses, and bodies that are not a JSON object.
+   */
   async function call<T>(operation: CognitoOperation, body: Record<string, unknown>): Promise<T> {
     const controller = new AbortController();
     let timedOut = false;

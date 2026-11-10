@@ -23,12 +23,16 @@ export interface GroceryScreenProps {
   planId?: string;
   /** Opens chat refinement for this plan's list (wired by the app shell). */
   onRefine?: (planId: string) => void;
+  /** Target of the back link. Defaults to `/grocery`. */
   indexHref?: string;
+  /** Builds the link to the plan this list belongs to. Defaults to `/plans/{planId}`. */
   planHref?: (planId: string) => string;
 }
 
+/** Explains what "Regenerate" does, including that it clears local check marks. */
 export const REGENERATE_HINT = 'Regenerating rebuilds the list from the current plan and what is in your fridge. Checked items are cleared.';
 
+/** Route-level screen. A `null` list means none has been generated for this plan yet. */
 export function GroceryScreen({ planId: planIdProp, onRefine, indexHref = '/grocery', planHref = (id) => `/plans/${id}` }: GroceryScreenProps) {
   const params = useParams();
   const planId = planIdProp ?? params.planId ?? '';
@@ -99,9 +103,12 @@ interface GroceryListViewProps {
   onRegenerate: () => void;
 }
 
+/** Shopping view: splits entries into "To buy" and "Done" using the device-local check state. */
 function GroceryListView({ list, planId, regenerating, onRegenerate }: GroceryListViewProps) {
   const { activeHouseholdId } = useActiveHousehold();
   const checks = useGroceryChecks(activeHouseholdId, planId, list.generatedAt);
+  // Checks are keyed by `generatedAt`, so regenerating the list starts fresh.
+  // Rows keep their original index so entries sharing a key still get unique React keys.
   const rows = list.entries.map((entry, index) => ({ entry, key: groceryEntryKey(entry), index }));
   const toBuy = rows.filter((row) => !checks.isChecked(row.key));
   const done = rows.filter((row) => checks.isChecked(row.key));
@@ -168,6 +175,7 @@ function GroceryListView({ list, planId, regenerating, onRegenerate }: GroceryLi
   );
 }
 
+/** "N of M in the basket" with an accessible progress bar; `onReset` is omitted when nothing is checked. */
 function Progress({ done, total, onReset }: { done: number; total: number; onReset?: () => void }) {
   const percent = total === 0 ? 0 : Math.round((done / total) * 100);
   return (
@@ -198,6 +206,7 @@ function Progress({ done, total, onReset }: { done: number; total: number; onRes
   );
 }
 
+/** One checkable entry. The whole row is the label, so the tap target is the full width. */
 function EntryRow({ entry, entryKey, checks }: { entry: GroceryEntry; entryKey: string; checks: GroceryChecks }) {
   const checked = checks.isChecked(entryKey);
   const amount = formatAmount(entry);
@@ -227,6 +236,7 @@ function EntryRow({ entry, entryKey, checks }: { entry: GroceryEntry; entryKey: 
   );
 }
 
+/** Localized short date and time for an ISO timestamp, or "recently" if it can't be parsed. */
 function generatedLabel(iso: string): string {
   const date = new Date(iso);
   if (Number.isNaN(date.getTime())) return 'recently';

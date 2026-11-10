@@ -25,6 +25,7 @@ export interface SuggestionCardProps {
   onRefine?: () => void;
 }
 
+/** Whole numbers as-is; fractions rounded to two decimals. */
 function formatQuantity(quantity: number): string {
   return Number.isInteger(quantity) ? String(quantity) : String(Math.round(quantity * 100) / 100);
 }
@@ -33,6 +34,7 @@ function formatIngredient(ingredient: Ingredient): string {
   return `${formatQuantity(ingredient.quantity)} ${ingredient.unit}`;
 }
 
+/** "gluten-free" or "quick_meal" -> "Gluten free" / "Quick meal". */
 function humanizeAttribute(attribute: string): string {
   const text = attribute.replace(/[-_]+/g, ' ').trim();
   return text.charAt(0).toUpperCase() + text.slice(1);
@@ -58,8 +60,10 @@ export function SuggestionCard({
   const names = suggestion.ingredients.map((i) => i.name);
   const keyNames = names.slice(0, KEY_INGREDIENT_COUNT);
   const more = names.length - keyNames.length;
+  // Optimistic display: show the in-flight value until the request settles.
   const shownFeedback = pendingFeedback ?? feedback;
 
+  // Keep the layout stable while the rejected suggestion is being replaced.
   if (rejecting) return <SuggestionCardSkeleton label={`Finding another idea instead of ${suggestion.name}`} />;
 
   return (
@@ -172,6 +176,7 @@ export function SuggestionCard({
   );
 }
 
+/** Like/dislike toggle. Ignores clicks while already selected or while a request is in flight. */
 function FeedbackButton({
   value,
   label,

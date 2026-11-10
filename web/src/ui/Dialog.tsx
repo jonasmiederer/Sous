@@ -3,6 +3,7 @@ import { X } from 'lucide-react';
 import { cx } from './cx';
 import { IconButton } from './IconButton';
 
+/** Centered modal, or a bottom sheet that becomes a side panel on large screens. */
 export type DialogPlacement = 'center' | 'sheet';
 
 export interface DialogProps {
@@ -25,9 +26,11 @@ export interface DialogProps {
   className?: string;
 }
 
+/** Selector for elements that can receive keyboard focus; used for the initial focus and the Tab trap. */
 const FOCUSABLE =
   'a[href], area[href], button:not([disabled]), input:not([disabled]):not([type="hidden"]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"]), [contenteditable="true"]';
 
+/** Focusable descendants of `root`, skipping inert and aria-hidden ones. */
 function focusableIn(root: HTMLElement): HTMLElement[] {
   return Array.from(root.querySelectorAll<HTMLElement>(FOCUSABLE)).filter((el) => !el.hasAttribute('inert') && el.getAttribute('aria-hidden') !== 'true');
 }
@@ -60,6 +63,7 @@ export function Dialog({
 }: DialogProps) {
   const ref = useRef<HTMLDialogElement>(null);
   const bodyRef = useRef<HTMLDivElement>(null);
+  // Always call the latest `onClose` without re-running the open/close effect when its identity changes.
   const onCloseRef = useRef(onClose);
   onCloseRef.current = onClose;
   const titleId = useId();
@@ -94,6 +98,7 @@ export function Dialog({
     };
   }, [open, initialFocusRef]);
 
+  /** Escape closes; Tab and Shift+Tab wrap around so focus can't leave the dialog. */
   function handleKeyDown(event: KeyboardEvent<HTMLDialogElement>) {
     if (event.key === 'Escape') {
       event.preventDefault();

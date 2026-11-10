@@ -1,6 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { CircleAlert, CircleCheck, Info, X } from 'lucide-react';
 
+/** Controls the toast's icon and intent. */
 export type ToastTone = 'info' | 'success' | 'error';
 
 export interface ToastOptions {
@@ -28,7 +29,9 @@ export interface ToastApi {
 const ToastContext = createContext<ToastApi | null>(null);
 
 export const DEFAULT_TOAST_MS = 5000;
+/** At most this many toasts are shown at once; the oldest drop off. */
 const MAX_VISIBLE = 3;
+/** Source of unique ids when the caller doesn't supply one. */
 let counter = 0;
 
 const ICONS = { info: Info, success: CircleCheck, error: CircleAlert } as const;
@@ -44,6 +47,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
     setItems((current) => current.filter((item) => item.id !== id));
   }, []);
 
+  // Reusing an id replaces that toast in place; otherwise append and keep only the newest MAX_VISIBLE.
   const show = useCallback((options: ToastOptions) => {
     const id = options.id ?? `toast-${++counter}`;
     const item: ToastItem = {
@@ -76,6 +80,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
   );
 }
 
+/** One toast. Auto-dismiss is paused while it is hovered or focused, so it can be read or acted on. */
 function ToastView({ item, onDismiss }: { item: ToastItem; onDismiss: (id: string) => void }) {
   const Icon = ICONS[item.tone];
   const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
@@ -121,6 +126,7 @@ function ToastView({ item, onDismiss }: { item: ToastItem; onDismiss: (id: strin
   );
 }
 
+/** Access the toast API. Throws if used outside `ToastProvider`. */
 export function useToast(): ToastApi {
   const api = useContext(ToastContext);
   if (!api) throw new Error('useToast must be used inside <ToastProvider>');

@@ -23,6 +23,7 @@ import { DeletePlanDialog } from './DeletePlanDialog';
 import { addableDays, dateRange, dayCountLabel, rangeLabel, shortDateLabel, weekdayLabel } from './dates';
 import { applyPlanEdit, errorMessage, planKey, plansListKey, usePlan } from './planQueries';
 
+/** Identifies the day a user wants to refine in chat. */
 export interface RefineDayTarget {
   planId: string;
   day: IsoDate;
@@ -30,26 +31,36 @@ export interface RefineDayTarget {
 }
 
 export interface PlanViewProps {
+  /** Overrides the `:planId` route param. */
   planId?: string;
+  /** When set, each day card shows a "Refine" action. */
   onRefineDay?: (target: RefineDayTarget) => void;
+  /** When set, the grocery link renders as a button that calls this instead. */
   onOpenGrocery?: (planId: string) => void;
+  /** Builds the grocery link target. Defaults to `/grocery/{planId}`. */
   groceryHref?: (planId: string) => string;
+  /** Where the back link and the post-delete redirect go. Defaults to `/plans`. */
   plansHref?: string;
 }
 
+/** State of the open DayEditor dialog; `null` means the dialog is closed. */
 interface EditorState {
   mode: DayEditorMode;
   day: IsoDate;
+  /** Name of the meal being swapped or removed (unused when adding). */
   mealName?: string;
+  /** Dates the user may pick from when adding a day outside the range. */
   choices?: IsoDate[];
 }
 
+/** Toast text shown after each kind of successful plan edit. */
 const CHANGE_MESSAGES: Record<PlanEditResult['change'], string> = {
   day_replaced: 'Meal swapped.',
   day_added: 'Meal added.',
   day_removed: 'Meal removed.',
 };
 
+/** Route-level wrapper: loads the plan and renders `PlanDetail` once it is available. */
 export function PlanView({ planId: planIdProp, onRefineDay, onOpenGrocery, groceryHref = (id) => `/grocery/${id}`, plansHref = '/plans' }: PlanViewProps) {
   const params = useParams();
   const planId = planIdProp ?? params.planId ?? '';
@@ -95,6 +106,7 @@ interface PlanDetailProps {
   plansHref: string;
 }
 
+/** Loaded-plan view: day list, grocery link, delete, and the swap/add/remove editor. */
 function PlanDetail({ stored, refetch, refetching, onRefineDay, onOpenGrocery, groceryHref, plansHref }: PlanDetailProps) {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
@@ -105,12 +117,17 @@ function PlanDetail({ stored, refetch, refetching, onRefineDay, onOpenGrocery, g
   const [conflict, setConflict] = useState(false);
 
   const { plan } = stored;
+  // Plan days only reference meals by id; resolve them against the stored meal list.
   const mealsById = useMemo(() => new Map(stored.meals.map((m) => [m.mealId, m])), [stored.meals]);
+  // day -> Meal. A day absent from this map has no meal (rendered as an empty card).
   const assigned = useMemo(() => new Map(plan.days.map((d) => [d.day, mealsById.get(d.mealId)])), [plan.days, mealsById]);
   const days = dateRange(plan.startDate, plan.endDate);
   const addable = addableDays(plan);
+  // Addable dates outside the plan's range (the days just before and after it).
+  // ISO dates compare correctly as plain strings.
   const outside = addable.filter((d) => d < plan.startDate || d > plan.endDate);
 
+  /** Applies an edit result to the cached plan without refetching, then refreshes the list. */
   function onDone(result: PlanEditResult) {
     queryClient.setQueryData<StoredPlan>(planKey(activeHouseholdId, plan.planId), (current) => applyPlanEdit(current ?? stored, result));
     void queryClient.invalidateQueries({ queryKey: plansListKey(activeHouseholdId) });
@@ -119,6 +136,7 @@ function PlanDetail({ stored, refetch, refetching, onRefineDay, onOpenGrocery, g
     toast.show({ message: CHANGE_MESSAGES[result.change], tone: 'success' });
   }
 
+  /** Drops the deleted plan from the cache and returns to the plans list. */
   function onDeleted() {
     queryClient.removeQueries({ queryKey: planKey(activeHouseholdId, plan.planId) });
     void queryClient.invalidateQueries({ queryKey: plansListKey(activeHouseholdId) });
@@ -153,6 +171,7 @@ function PlanDetail({ stored, refetch, refetching, onRefineDay, onOpenGrocery, g
         )}
       </div>
 
+      {/* Shown when the server rejects an edit because the plan changed elsewhere. */}
       {conflict && (
         <ErrorBanner
           title="This plan changed"
@@ -234,6 +253,7 @@ function PlanDetail({ stored, refetch, refetching, onRefineDay, onOpenGrocery, g
   );
 }
 
+/** "Weekday · date" label shared by assigned and empty day cards. */
 function DayHeading({ day }: { day: IsoDate }) {
   return (
     <p className="text-xs font-semibold uppercase tracking-wide text-text-muted">
@@ -250,6 +270,7 @@ interface DayCardProps {
   onRefine?: () => void;
 }
 
+/** A day with an assigned meal: attributes, collapsible recipe, and swap/refine/remove actions. */
 function DayCard({ day, meal, onReplace, onRemove, onRefine }: DayCardProps) {
   return (
     <article aria-label={`${weekdayLabel(day)}, ${shortDateLabel(day)}: ${meal.name}`} className="flex h-full flex-col gap-3 rounded-2xl border border-border bg-surface p-4 shadow-card">
@@ -314,6 +335,7 @@ function DayCard({ day, meal, onReplace, onRemove, onRefine }: DayCardProps) {
   );
 }
 
+/** Placeholder for a date inside the plan's range that has no meal yet. */
 function EmptyDayCard({ day, onAdd }: { day: IsoDate; onAdd: () => void }) {
   return (
     <article

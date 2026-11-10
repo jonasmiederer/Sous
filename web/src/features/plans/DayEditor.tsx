@@ -18,6 +18,7 @@ import { PlanPresetPicker, presetConflict } from './PlanPresetPicker';
 import { PLAN_CONTEXT_MAX, dayLabel } from './dates';
 import { errorCode, errorMessage } from './planQueries';
 
+/** Which edit the dialog performs. */
 export type DayEditorMode = 'replace' | 'add' | 'remove';
 
 export interface DayEditorProps {
@@ -36,12 +37,14 @@ export interface DayEditorProps {
   onConflict?: () => void;
 }
 
+/** Input for the edit mutation. */
 interface EditVariables {
   day: IsoDate;
   contextInput: string;
   presets: Preset[];
 }
 
+/** Dialog title per mode. */
 const TITLES: Record<DayEditorMode, string> = {
   replace: 'Swap this meal',
   add: 'Add a meal',
@@ -54,6 +57,7 @@ export function DayEditor(props: DayEditorProps) {
   return <DayEditorDialog key={`${props.mode}:${props.day}`} {...props} />;
 }
 
+/** The open dialog. Closing is blocked while a request is running so a result can't be lost. */
 function DayEditorDialog({ mode, planId, day, mealName, addableDays, onClose, onDone, onConflict }: DayEditorProps) {
   const api = useApi();
   const [selectedDay, setSelectedDay] = useState<IsoDate>(day);
@@ -79,6 +83,7 @@ function DayEditorDialog({ mode, planId, day, mealName, addableDays, onClose, on
   const tooLong = isOverLimit(contextInput, PLAN_CONTEXT_MAX);
   const conflict = presetConflict(presets);
   const choices = addableDays && addableDays.length > 0 ? addableDays : [day];
+  // A plan conflict is handed to the parent (which shows its own banner) when it supplied `onConflict`.
   const showError = edit.isError && !(errorCode(edit.error) === 'PLAN_CONFLICT' && onConflict);
 
   function submit(event?: FormEvent) {

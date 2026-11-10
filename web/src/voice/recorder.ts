@@ -210,6 +210,11 @@ function recorderError(code: RecorderErrorCode): RecorderError {
   return { code, message: RECORDER_ERROR_MESSAGES[code] };
 }
 
+/**
+ * Fills in real browser APIs for anything not injected. Missing APIs (no
+ * microphone support, no MediaRecorder) stay `undefined`; `start()` checks for
+ * them and reports `unsupported`. `webkitAudioContext` covers older Safari.
+ */
 function resolveDefaults(deps: RecorderDeps): Required<RecorderDeps> {
   const g = globalThis as unknown as Record<string, unknown>;
   const mediaDevices = (g.navigator as { mediaDevices?: MediaDevices } | undefined)?.mediaDevices;
@@ -233,6 +238,10 @@ function resolveDefaults(deps: RecorderDeps): Required<RecorderDeps> {
   };
 }
 
+/**
+ * Joins PCM chunks into one buffer, truncated to `limit` bytes. The length is
+ * rounded down to an even number so a 16-bit sample is never split.
+ */
 function concatChunks(chunks: Uint8Array[], limit: number): Uint8Array {
   const total = Math.min(
     chunks.reduce((n, c) => n + c.byteLength, 0),
@@ -250,7 +259,11 @@ function concatChunks(chunks: Uint8Array[], limit: number): Uint8Array {
   return out;
 }
 
-/** One recording attempt's resources. */
+/**
+ * One recording attempt's resources. A new `Session` is created per `start()`
+ * call, and every async continuation checks `cancelled` and `session === s`
+ * so a stale attempt can never overwrite the state of a newer one.
+ */
 interface Session {
   cancelled: boolean;
   startedAt: number;
@@ -264,17 +277,25 @@ interface Session {
   blobParts: BlobLike[];
   timeout?: unknown;
   interval?: unknown;
+  /** Set once stopping begins, so repeated stop calls share one result. */
   stopping?: Promise<RecorderSnapshot>;
+  /** Resolvers for the pending flush (PCM) or MediaRecorder stop (fallback) wait. */
   onFlushed?: () => void;
   onMediaStop?: () => void;
 }
 
+/** Creates a recorder. Pass `deps` to replace browser APIs, e.g. in tests. */
 export function createRecorder(deps: RecorderDeps = {}): Recorder {
   const d = resolveDefaults(deps);
   const listeners = new Set<(snapshot: RecorderSnapshot) => void>();
   let snapshot: RecorderSnapshot = { state: 'idle', remainingMs: MAX_RECORDING_MS };
   let session: Session | undefined;
 
+  /**
+   * Publishes a new snapshot to subscribers. `result` and `error` are not
+   * carried over, so they only exist on the snapshot that sets them; `mode`
+   * and `remainingMs` persist unless overridden.
+   */
   function set(next: Partial<RecorderSnapshot> & { state: RecorderState }): void {
     snapshot = {
       state: next.state,
@@ -290,6 +311,7 @@ export function createRecorder(deps: RecorderDeps = {}): Recorder {
     return Math.max(0, MAX_RECORDING_MS - (d.now() - s.startedAt));
   }
 
+  /** Stops timers, detaches audio nodes, and releases the microphone and AudioContext. Safe to call more than once. */
   function releaseResources(s: Session): void {
     if (s.timeout !== undefined) d.clearTimeout(s.timeout);
     if (s.interval !== undefined) d.clearInterval(s.interval);
@@ -328,11 +350,13 @@ export function createRecorder(deps: RecorderDeps = {}): Recorder {
     s.stream = s.context = s.source = s.node = s.mediaRecorder = undefined;
   }
 
+  /** Releases resources and enters the `error` state, unless a newer session has taken over. */
   function fail(s: Session, code: RecorderErrorCode): void {
     releaseResources(s);
     if (session === s) set({ state: 'error', error: recorderError(code) });
   }
 
+  /** Starts the hard time limit and the interval that refreshes the countdown. */
   function beginTimers(s: Session): void {
     s.startedAt = d.now();
     s.timeout = d.setTimeout(() => void finish(s, 'time-limit'), MAX_RECORDING_MS);
@@ -343,6 +367,11 @@ export function createRecorder(deps: RecorderDeps = {}): Recorder {
     }, TICK_MS);
   }
 
+  /**
+   * Wires the microphone into the capture worklet and collects the PCM chunks
+   * it posts back. Stops itself at `MAX_PCM_BYTES`. Returns false when there is
+   * no AudioContext, so the caller can fall back to MediaRecorder.
+   */
   async function startPcm(s: Session, stream: MediaStreamLike): Promise<boolean> {
     const context = s.context;
     if (!context) return false;
@@ -376,6 +405,7 @@ export function createRecorder(deps: RecorderDeps = {}): Recorder {
     return true;
   }
 
+  /** MediaRecorder path: records in the best supported container, emitting a chunk every second. */
   function startFallback(s: Session, stream: MediaStreamLike): void {
     const mimeType = pickFallbackMimeType((t) => d.MediaRecorder.isTypeSupported(t));
     const mediaRecorder = mimeType ? new d.MediaRecorder(stream, { mimeType }) : new d.MediaRecorder(stream);
@@ -388,6 +418,12 @@ export function createRecorder(deps: RecorderDeps = {}): Recorder {
     mediaRecorder.start(1_000);
   }
 
+  /**
+   * Begins a recording. Ignored if one is already active. The AudioContext and
+   * worklet load are kicked off before the first `await` (user-gesture rule),
+   * then the permission prompt runs in parallel with the worklet load. PCM is
+   * preferred; if the worklet is unavailable or fails, MediaRecorder is used.
+   */
   async function start(): Promise<void> {
     if (snapshot.state === 'requesting-permission' || snapshot.state === 'recording' || snapshot.state === 'stopping') {
       return;
@@ -464,6 +500,10 @@ export function createRecorder(deps: RecorderDeps = {}): Recorder {
     }
   }
 
+  /**
+   * Resolves when `register`'s callback fires, or after `FLUSH_TIMEOUT_MS`,
+   * whichever comes first, so a lost worklet or MediaRecorder event can't hang a stop.
+   */
   function waitFor(s: Session, register: (done: () => void) => void): Promise<void> {
     return new Promise<void>((resolve) => {
       let settled = false;
@@ -478,6 +518,7 @@ export function createRecorder(deps: RecorderDeps = {}): Recorder {
     });
   }
 
+  /** Asks the worklet to flush its buffered samples, then returns all captured PCM bytes. */
   async function collectPcm(s: Session): Promise<Uint8Array> {
     const node = s.node;
     if (node) {
@@ -489,6 +530,7 @@ export function createRecorder(deps: RecorderDeps = {}): Recorder {
     return concatChunks(s.pcmChunks, MAX_PCM_BYTES);
   }
 
+  /** Stops MediaRecorder and returns the recorded bytes, or `'too-large'` if over the upload limit. */
   async function collectFallback(s: Session): Promise<{ bytes: Uint8Array; type: string } | 'too-large'> {
     const mediaRecorder = s.mediaRecorder;
     if (mediaRecorder && mediaRecorder.state !== 'inactive') {
@@ -504,6 +546,11 @@ export function createRecorder(deps: RecorderDeps = {}): Recorder {
     return { bytes: await d.readBlob(blob), type };
   }
 
+  /**
+   * Common stop path for the user, the time limit, and the size limit.
+   * Idempotent: later calls return the same promise. Ends in `done`, or in
+   * `error` when the audio is too short, too large, or collection fails.
+   */
   function finish(s: Session, reason: StopReason): Promise<RecorderSnapshot> {
     if (s.stopping) return s.stopping;
     if (session !== s || snapshot.state !== 'recording') return Promise.resolve(snapshot);
@@ -543,6 +590,7 @@ export function createRecorder(deps: RecorderDeps = {}): Recorder {
     return s.stopping;
   }
 
+  /** Aborts an active recording, discarding audio. No effect when idle or already finished. */
   function cancel(): void {
     const s = session;
     if (!s || s.cancelled) return;

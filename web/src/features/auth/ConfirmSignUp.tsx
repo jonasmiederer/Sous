@@ -8,10 +8,16 @@ import { Button, ErrorBanner, TextField } from '../../ui';
 import { AuthLayout, LINK_CLASS, Notice, isPlausibleEmail } from './AuthLayout';
 import type { ConfirmLocationState } from './SignUp';
 
+/** User-safe text for an error; unknown errors get a generic message. */
 function messageOf(err: unknown): string {
   return err instanceof CognitoError ? err.userMessage : 'Something went wrong. Please try again.';
 }
 
+/**
+ * Confirms a new account with the emailed code and can resend it. Email is
+ * prefilled from router state when arriving from sign-up, but users who open
+ * this page directly (e.g. "Have a code already?") can type it in.
+ */
 export function ConfirmSignUp() {
   const { cognito } = useServices();
   const navigate = useNavigate();

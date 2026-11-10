@@ -45,14 +45,18 @@ import type {
   SuggestResponse,
 } from './types';
 
+/** Static description of one API route. */
 export interface RouteDef {
   method: HttpMethod;
   /** Route template as configured in API Gateway. */
   route: string;
+  /** `public` needs no session, `user` needs sign-in, `household` also needs an active household. */
   access: EndpointAccess;
+  /** Client-side timeout; generous for routes that call the agent (suggestions, plans, edits, voice, messages). */
   timeoutMs: number;
 }
 
+/** Default timeout for ordinary reads and writes. */
 const S10 = 10_000;
 
 export const ROUTES = {
@@ -95,6 +99,7 @@ export const ROUTES = {
   confirmVoice: { method: 'POST', route: '/voice/{id}/confirm', access: 'household', timeoutMs: S10 },
 } as const satisfies Record<string, RouteDef>;
 
+/** Key into `ROUTES`, e.g. `'getPlan'`. */
 export type EndpointName = keyof typeof ROUTES;
 
 /** Fills `{param}` placeholders with URL-encoded values. Throws on a missing or empty value. */
@@ -107,10 +112,13 @@ export function buildPath(route: string, params: Record<string, string> = {}): s
 }
 
 export interface CallOptions {
+  /** Cancels the request, e.g. when a component unmounts or a newer request supersedes it. */
   signal?: AbortSignal;
 }
 
+/** Builds the typed API surface on top of a low-level `ApiClient`. */
 export function createEndpoints(client: ApiClient) {
+  /** Looks up the route, fills its path params, and sends the request with the route's access class and timeout. */
   function call<T>(name: EndpointName, params: Record<string, string>, body: unknown, opts?: CallOptions): Promise<T> {
     const def: RouteDef = ROUTES[name];
     return client.request<T>({
@@ -188,4 +196,5 @@ export function createEndpoints(client: ApiClient) {
   };
 }
 
+/** The typed API object injected through `ServicesProvider`. */
 export type SousApi = ReturnType<typeof createEndpoints>;

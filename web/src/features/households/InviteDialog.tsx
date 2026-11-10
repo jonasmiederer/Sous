@@ -14,9 +14,11 @@ export interface InviteDialogProps {
   open: boolean;
   onClose: () => void;
   householdId: string;
+  /** Used in the dialog text and the share message. */
   householdName?: string;
 }
 
+/** Two-step dialog: enter an email, then copy or share the generated link. */
 export function InviteDialog({ open, onClose, householdId, householdName }: InviteDialogProps) {
   const api = useApi();
   const toast = useToast();
@@ -26,6 +28,7 @@ export function InviteDialog({ open, onClose, householdId, householdName }: Invi
   const [pending, setPending] = useState(false);
   const [invitation, setInvitation] = useState<Invitation>();
 
+  // Reset when closed so the next opening starts at the email step.
   useEffect(() => {
     if (!open) {
       setEmail('');
@@ -64,6 +67,7 @@ export function InviteDialog({ open, onClose, householdId, householdName }: Invi
     );
   }
 
+  /** Opens the native share sheet. Only offered when `navigator.share` exists. */
   async function onShare() {
     try {
       await navigator.share({

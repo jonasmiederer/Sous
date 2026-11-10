@@ -53,10 +53,12 @@ export function Notice({ tone = 'info', children, className }: NoticeProps) {
   );
 }
 
+/** Shared styling for text links inside the auth screens. */
 export const LINK_CLASS = 'font-medium text-accent-text underline-offset-4 hover:underline focus-visible:underline';
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
+/** Cheap client-side check: non-empty local and domain parts around a single `@` with a dot. Real validation is Cognito's. */
 export function isPlausibleEmail(value: string): boolean {
   return EMAIL_PATTERN.test(value.trim());
 }

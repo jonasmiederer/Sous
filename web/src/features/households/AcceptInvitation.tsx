@@ -14,12 +14,14 @@ import { householdsQueryKey, useActiveHousehold } from '../../household/ActiveHo
 import { Button, ErrorBanner } from '../../ui';
 import { HOUSEHOLDS_PATH, errorText } from './shared';
 
+/** Result of the user's choice; drives which card is rendered. */
 type Outcome =
   | { kind: 'idle' }
   | { kind: 'accepted'; householdId: string }
   | { kind: 'declined' }
   | { kind: 'error'; message: string };
 
+/** Centered card with an icon and heading, shared by all outcomes. */
 function Card({ icon, title, children }: { icon: ReactNode; title: string; children: ReactNode }) {
   return (
     <div className="mx-auto flex w-full max-w-md flex-col items-center gap-4 rounded-3xl border border-border bg-surface p-6 text-center shadow-card sm:p-8">
@@ -32,6 +34,7 @@ function Card({ icon, title, children }: { icon: ReactNode; title: string; child
   );
 }
 
+/** Route component for an invitation link; the invitation id comes from the URL. */
 export function AcceptInvitation() {
   const { invitationId = '' } = useParams();
   const location = useLocation();
@@ -44,11 +47,13 @@ export function AcceptInvitation() {
   const [pending, setPending] = useState<'accept' | 'decline' | 'switch'>();
   const [switchError, setSwitchError] = useState<string>();
 
+  // Remember the full URL (including query and hash) so sign-in returns here.
   if (!session) {
     const state: SignInLocationState = { from: `${location.pathname}${location.search}${location.hash}` };
     return <Navigate to={SIGN_IN_PATH} replace state={state} />;
   }
 
+  /** Accepts or declines. After accepting, the households list is refreshed so the new one is available. */
   async function respond(action: 'accept' | 'decline') {
     setPending(action);
     try {
@@ -67,6 +72,7 @@ export function AcceptInvitation() {
     }
   }
 
+  /** Makes the newly joined household active, then goes to the home screen. */
   async function switchTo(householdId: string) {
     setPending('switch');
     setSwitchError(undefined);

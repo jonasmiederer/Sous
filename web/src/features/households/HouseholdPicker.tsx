@@ -12,11 +12,17 @@ import { AsyncView, EmptyState, ErrorBanner, cx } from '../../ui';
 import { CreateHousehold } from './CreateHousehold';
 import { HOUSEHOLDS_PATH, MEMBERS_PATH, RoleBadge, ScreenHeader, errorText } from './shared';
 
+/**
+ * Where to go after choosing a household: the page the user was bounced from,
+ * or `/`. Only same-origin paths are accepted (no `//host` open redirects), and
+ * never the households screen itself, which would loop.
+ */
 function returnPath(state: HouseholdsLocationState | null): string {
   const from = state?.from;
   return from && from.startsWith('/') && !from.startsWith('//') && !from.startsWith(HOUSEHOLDS_PATH) ? from : '/';
 }
 
+/** Lists the user's households, lets them pick the active one, and create new ones. */
 export function HouseholdPicker() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -24,6 +30,7 @@ export function HouseholdPicker() {
   const [selecting, setSelecting] = useState<string>();
   const [error, setError] = useState<string>();
 
+  /** Makes `householdId` active, then navigates to `then` (default: the saved return path). */
   async function choose(householdId: string, then?: string) {
     setSelecting(householdId);
     setError(undefined);

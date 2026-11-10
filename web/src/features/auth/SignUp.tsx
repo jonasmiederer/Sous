@@ -7,13 +7,17 @@ import type { SignInLocationState } from '../../auth/RequireSession';
 import { Button, ErrorBanner, TextField, codePointLength } from '../../ui';
 import { AuthLayout, LINK_CLASS, isPlausibleEmail } from './AuthLayout';
 
+/** Password length limits, counted in code points (see `passwordError`). */
 export const PASSWORD_MIN = 8;
 export const PASSWORD_MAX = 128;
+/** Route of the email-code confirmation screen. */
 export const CONFIRM_PATH = '/sign-up/confirm';
 
 /** Navigation state for the confirmation screen. */
 export interface ConfirmLocationState {
+  /** Address the account was created with; prefills the confirm form. */
   email?: string;
+  /** Masked address Cognito sent the code to (e.g. `j***@example.com`). */
   destination?: string;
 }
 
@@ -25,6 +29,11 @@ export function passwordError(password: string): string | undefined {
   return undefined;
 }
 
+/**
+ * Account creation form. Validates client-side, then calls Cognito directly.
+ * Unconfirmed accounts continue to the code screen; auto-confirmed ones go
+ * straight to sign-in.
+ */
 export function SignUp() {
   const { cognito } = useServices();
   const navigate = useNavigate();
