@@ -1,0 +1,111 @@
+name: Release and deploy
+
+# Manual: pick a semantic version bump. The workflow tests, bumps the version in
+# package.json / web/package.json, commits, tags vX.Y.Z, creates a GitHub release
+# and deploys that tag with CDK.
+#
+# bump = none skips versioning and just deploys the selected branch/tag.
+on:
+  workflow_dispatch:
+    inputs:
+      bump:
+        description: Semantic version bump
+        type: choice
+        options: [patch, minor, major, none]
+        default: patch
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-deploy
+  cancel-in-progress: false
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm run build
+      - run: npm run test:all
+
+  version:
+    needs: test
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # push the version commit and tag, create the release
+    outputs:
+      version: ${{ steps.bump.outputs.version }}
+      ref: ${{ steps.bump.outputs.ref }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Bump version, commit and tag
+        id: bump
+        env:
+          BUMP: ${{ inputs.bump }}
+        run: |
+          set -euo pipefail
+          if [ "$BUMP" = "none" ]; then
+            VERSION=$(node -p "require('./package.json').version")
+            echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+            echo "ref=${GITHUB_SHA}" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          VERSION=$(node scripts/bump-version.mjs "$BUMP")
+          git add package.json package-lock.json web/package.json
+          git commit -m "chore(release): v${VERSION}"
+          git tag -a "v${VERSION}" -m "v${VERSION}"
+          git push origin "HEAD:${GITHUB_REF_NAME}" "v${VERSION}"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "ref=v${VERSION}" >> "$GITHUB_OUTPUT"
+      - name: Create GitHub release
+        if: inputs.bump != 'none'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release create "v${{ steps.bump.outputs.version }}" --generate-notes --title "v${{ steps.bump.outputs.version }}"
+
+  deploy:
+    needs: version
+    runs-on: ubuntu-latest
+    environment: production
+    permissions:
+      id-token: write # OIDC to AWS
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.version.outputs.ref }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      # The agent and voice images are linux/arm64; build them under emulation.
+      - uses: docker/setup-qemu-action@v3
+        with:
+          platforms: arm64
+      - uses: docker/setup-buildx-action@v3
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.AWS_DEPLOY_ROLE_ARN }}
+          aws-region: ${{ vars.AWS_REGION }}
+      - run: npm ci
+      - run: npm run build
+      - run: npm run build:web
+      - name: Deploy
+        run: >
+          npx cdk deploy Sous
+          --require-approval never
+          --tags Version=${{ needs.version.outputs.version }}
