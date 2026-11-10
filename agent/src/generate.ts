@@ -68,6 +68,8 @@ export interface GenerateMeta {
   /** Total model calls made for this request (all chunks). */
   modelCalls: number;
   softPreferences: SoftPreferenceOrigin;
+  /** Last model SDK/service error (name and message, never request content), if any. */
+  modelError?: string;
 }
 
 export type GenerateResult =
@@ -101,18 +103,22 @@ interface ChainContext {
   budget: Budget;
   /** Aborted when the budget expires or (plans) another chunk fails. */
   signal: AbortSignal;
-  counter: { calls: number };
+  /** Model call count, plus the last SDK/service error (name and message only) for the request log. */
+  counter: { calls: number; lastModelError?: string };
 }
 
 const TIMEOUT: ChainResult<never> = { ok: false, code: 'GENERATION_TIMEOUT', message: 'Generation budget expired.' };
 
 async function callModel(ctx: ChainContext, request: StructuredRequest): Promise<StructuredResult> {
   ctx.counter.calls++;
+  let result: StructuredResult;
   try {
-    return await ctx.model.generateStructured(request);
+    result = await ctx.model.generateStructured(request);
   } catch (err) {
-    return { ok: false, reason: 'model_error', message: err instanceof Error ? err.message : 'model call failed' };
+    result = { ok: false, reason: 'model_error', message: err instanceof Error ? err.message : 'model call failed' };
   }
+  if (!result.ok && result.reason === 'model_error') ctx.counter.lastModelError = result.message;
+  return result;
 }
 
 /** Validate one model result; returns the checked value or a validator message. */
@@ -288,9 +294,13 @@ export async function generate(request: AgentRequest, deps: GenerateDeps): Promi
   const controller = new AbortController();
   const onBudgetAbort = (): void => controller.abort(budget.signal.reason);
   budget.signal.addEventListener('abort', onBudgetAbort, { once: true });
-  const counter = { calls: 0 };
+  const counter: ChainContext['counter'] = { calls: 0 };
   let origin: SoftPreferenceOrigin = 'request';
-  const meta = (): GenerateMeta => ({ modelCalls: counter.calls, softPreferences: origin });
+  const meta = (): GenerateMeta => ({
+    modelCalls: counter.calls,
+    softPreferences: origin,
+    ...(counter.lastModelError !== undefined ? { modelError: counter.lastModelError } : {}),
+  });
 
   try {
     const soft = await resolveSoftPreferences(request, deps.softPreferences);

@@ -175,6 +175,7 @@ export function createServer(deps: ServerDeps): Server {
     const result = await runGenerate(request, generateDeps);
     record.modelCalls = result.meta.modelCalls;
     record.softPreferences = result.meta.softPreferences;
+    if (result.meta.modelError !== undefined) record.modelError = result.meta.modelError;
     if (result.ok) {
       record.status = 200;
       sendJson(res, 200, result.response);
