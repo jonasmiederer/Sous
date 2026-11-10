@@ -111,11 +111,11 @@ describe('generatePlan', () => {
     expect(planItems()).toHaveLength(0);
   });
 
-  it('requires a Preference_Profile and stores nothing without one', async () => {
+  it('generates a plan without a Preference_Profile, sending a null profile to the agent', async () => {
     const result = await service().generatePlan({ weekly: true });
-    expect(!result.ok && result.error.code).toBe('PROFILE_REQUIRED');
-    expect(agent.calls).toHaveLength(0);
-    expect(planItems()).toHaveLength(0);
+    expect(result.ok && result.value.plan.days.length).toBe(7);
+    expect(agent.calls).toHaveLength(1);
+    expect(agent.lastPayload?.preferenceProfile).toBeNull();
   });
 
   it('rejects over-length context input before invoking the agent', async () => {
