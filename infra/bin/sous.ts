@@ -21,6 +21,9 @@
  *   memoryPreferenceStrategyId  optional; sets MEMORY_PREFERENCE_STRATEGY_ID
  *   corsAllowOrigins            optional comma-separated origin list (default: the Client_App
  *                               CloudFront origin; e.g. add http://localhost:5173 for development)
+ *   customDomainName            optional; custom domain for the Client_App distribution (requires
+ *                               customDomainCertificateArn; DNS is managed outside this stack)
+ *   customDomainCertificateArn  us-east-1 ACM certificate ARN covering customDomainName
  *
  * Synth needs the built Client_App in web/dist; `npm run synth` builds it first.
  */
@@ -60,6 +63,11 @@ const modelId = context('agentModelId');
 const crossModel = crossAccountModel();
 const strategyId = context('memoryPreferenceStrategyId');
 const origins = context('corsAllowOrigins');
+const customDomainName = context('customDomainName');
+const customDomainCertificateArn = context('customDomainCertificateArn');
+if (customDomainName && !customDomainCertificateArn) {
+  throw new Error('customDomainCertificateArn is required when customDomainName is set');
+}
 new SousStack(app, 'Sous', {
   description: 'Sous meal planner',
   env: { account: process.env.CDK_DEFAULT_ACCOUNT, region: process.env.CDK_DEFAULT_REGION },
@@ -67,5 +75,8 @@ new SousStack(app, 'Sous', {
   ...(modelId ? { agentModelId: modelId } : {}),
   ...(crossModel ? { crossAccountModel: crossModel } : {}),
   ...(strategyId ? { memoryPreferenceStrategyId: strategyId } : {}),
+  ...(customDomainName && customDomainCertificateArn
+    ? { customDomain: { domainName: customDomainName, certificateArn: customDomainCertificateArn } }
+    : {}),
   ...(origins ? { corsAllowOrigins: origins.split(',').map((o) => o.trim()) } : {}),
 });

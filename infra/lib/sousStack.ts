@@ -28,6 +28,7 @@ import {
   aws_apigatewayv2_authorizers as authorizers,
   aws_apigatewayv2_integrations as integrations,
   aws_bedrockagentcore as agentcore,
+  aws_certificatemanager as acm,
   aws_cloudfront as cloudfront,
   aws_cloudfront_origins as origins,
   aws_cognito as cognito,
@@ -99,6 +100,13 @@ export interface SousStackProps extends StackProps {
    * example, `http://localhost:5173` for local development.
    */
   corsAllowOrigins?: string[];
+  /**
+   * Optional custom domain for the Client_App CloudFront distribution. The
+   * certificate must be an ACM certificate in us-east-1 covering the domain.
+   * DNS (an alias record to the distribution) is managed outside this stack.
+   * The domain is added to the default CORS origins.
+   */
+  customDomain?: { domainName: string; certificateArn: string };
   /**
    * Directory of the built Client_App, absolute or relative to the repository
    * root. Defaults to `web/dist`. Must contain `index.html`.
@@ -572,6 +580,12 @@ export class SousStack extends Stack {
       defaultRootObject: 'index.html',
       httpVersion: cloudfront.HttpVersion.HTTP2_AND_3,
       priceClass: cloudfront.PriceClass.PRICE_CLASS_100,
+      ...(props.customDomain
+        ? {
+            domainNames: [props.customDomain.domainName],
+            certificate: acm.Certificate.fromCertificateArn(this, 'WebCertificate', props.customDomain.certificateArn),
+          }
+        : {}),
       defaultBehavior: {
         origin: origins.S3BucketOrigin.withOriginAccessControl(webBucket),
         viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
@@ -593,7 +607,9 @@ export class SousStack extends Stack {
         userPoolClients: [userPoolClient],
       }),
       corsPreflight: {
-        allowOrigins: props.corsAllowOrigins ?? [webOrigin],
+        allowOrigins:
+          props.corsAllowOrigins ??
+          (props.customDomain ? [webOrigin, `https://${props.customDomain.domainName}`] : [webOrigin]),
         allowHeaders: ['authorization', 'content-type', 'x-active-household'],
         // The client reads retry-after for the sign-in lockout message.
         exposeHeaders: ['retry-after'],
