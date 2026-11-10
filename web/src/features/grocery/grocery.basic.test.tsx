@@ -170,4 +170,47 @@ describe('GroceryScreen', () => {
     expect(screen.getByRole('checkbox', { name: 'tomato, 3 pieces' })).not.toBeChecked();
     expect(screen.queryByRole('list', { name: 'Done' })).toBeNull();
   });
+
+  it('edits the list: change an amount, remove an item, add one, then saves with PUT', async () => {
+    const user = userEvent.setup();
+    const saved = groceryList(LIST.generatedAt, [
+      { name: 'tomato', quantity: 5, unit: 'piece' },
+      { name: 'milk', quantity: 1.5, unit: 'cup' },
+      { name: 'eggs', quantity: 6, unit: 'piece' },
+    ]);
+    const { calls } = renderGrocery('/grocery/plan-1', {
+      [`GET ${LIST_URL}`]: { body: { groceryList: LIST, version: 1 } },
+      [`PUT ${LIST_URL}`]: { body: { groceryList: saved, version: 2 } },
+    });
+    await user.click(await screen.findByRole('button', { name: 'Edit list' }));
+
+    const amount = screen.getByRole('textbox', { name: 'Amount of tomato' });
+    await user.clear(amount);
+    await user.type(amount, '5');
+    await user.click(screen.getByRole('button', { name: 'Remove rice' }));
+    await user.type(screen.getByRole('textbox', { name: 'Add an item' }), '6 eggs{Enter}');
+    await user.click(screen.getByRole('button', { name: 'Save list' }));
+
+    expect(await screen.findByRole('checkbox', { name: 'eggs, 6 pieces' })).toBeInTheDocument();
+    expect(screen.getByRole('checkbox', { name: 'tomato, 5 pieces' })).toBeInTheDocument();
+    expect(screen.queryByRole('checkbox', { name: /rice/ })).toBeNull();
+    const put = calls.find((c) => c.method === 'PUT' && c.url === LIST_URL);
+    expect(put?.body).toEqual({
+      entries: [
+        { name: 'tomato', quantity: 5, unit: 'piece' },
+        { name: 'milk', quantity: 1.5, unit: 'cup' },
+        { name: 'eggs', quantity: 6, unit: 'piece' },
+      ],
+    });
+  });
+
+  it('blocks saving an item without an amount and does not call the API', async () => {
+    const user = userEvent.setup();
+    const { calls } = renderGrocery('/grocery/plan-1', { [`GET ${LIST_URL}`]: { body: { groceryList: LIST, version: 1 } } });
+    await user.click(await screen.findByRole('button', { name: 'Edit list' }));
+    await user.clear(screen.getByRole('textbox', { name: 'Amount of rice' }));
+    await user.click(screen.getByRole('button', { name: 'Save list' }));
+    expect(await screen.findByRole('alert')).toHaveTextContent('amount above 0');
+    expect(calls.some((c) => c.method === 'PUT')).toBe(false);
+  });
 });

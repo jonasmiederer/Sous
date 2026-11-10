@@ -1,13 +1,14 @@
 /**
  * Lambda entry points for the Grocery Service.
  *
- *   handler                 API Gateway: POST and GET /plans/{id}/grocery-list
+ *   handler                 API Gateway: POST, GET and PUT /plans/{id}/grocery-list
  *   mealPlanChangedHandler  EventBridge rule target for MealPlanChanged (7.5)
  *
  * Environment: TABLE_NAME.
  */
 import type { TableClient } from '../../data/tableClient.js';
 import {
+  bodyText,
   createActiveHouseholdResolver,
   scopedRouter,
   withActiveHousehold,
@@ -30,6 +31,8 @@ function buildApi(): (event: AuthorizedApiEvent) => Promise<HttpResponse> {
         grocery.generateGroceryList({ scope, pathParameters: event.pathParameters ?? null }),
       'GET /plans/{id}/grocery-list': (event, scope) =>
         grocery.getGroceryList({ scope, pathParameters: event.pathParameters ?? null }),
+      'PUT /plans/{id}/grocery-list': (event, scope) =>
+        grocery.updateGroceryList({ scope, pathParameters: event.pathParameters ?? null, body: bodyText(event) }),
     }),
   );
 }

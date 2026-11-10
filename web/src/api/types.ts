@@ -249,6 +249,11 @@ export interface GenerateGroceryListResponse {
   version: number;
 }
 
+/** PUT /plans/{id}/grocery-list: replaces all entries with a manual edit. */
+export interface UpdateGroceryListRequest {
+  entries: Ingredient[];
+}
+
 export interface GetGroceryListResponse {
   groceryList: GroceryList;
   version: number;

@@ -3,6 +3,7 @@
  *
  *   POST /plans/{id}/grocery-list   generate (or rebuild) the plan's Grocery_List
  *   GET  /plans/{id}/grocery-list   read the stored list (404 GROCERY_LIST_NOT_FOUND)
+ *   PUT  /plans/{id}/grocery-list   replace the entries with a manual edit { entries }
  *
  * The request's Active_Household scope was already resolved and
  * membership-verified by the authorizer (task 15.1). The handler calls the
@@ -20,6 +21,8 @@ export interface AuthorizedGroceryRequest {
   /** Already-authorized Active_Household scope. */
   scope: ActiveHouseholdScope;
   pathParameters?: Record<string, string | undefined> | null;
+  /** Raw request body (PUT only). */
+  body?: string | null;
 }
 
 export interface HttpResponse {
@@ -65,6 +68,26 @@ export function createGroceryHandlers(serviceFor: GroceryServiceFor) {
     getGroceryList: async (req: AuthorizedGroceryRequest): Promise<HttpResponse> => {
       try {
         const result = await serviceFor(req.scope).get(req.pathParameters?.id);
+        if (!result.ok) return errorResponse(result.error);
+        const { groceryList, version, sourcePlanVersion } = result.value;
+        return respond(200, { groceryList, version, sourcePlanVersion });
+      } catch {
+        return respond(500, { error: { code: 'INTERNAL_ERROR', message: 'The request could not be completed.' } });
+      }
+    },
+
+    updateGroceryList: async (req: AuthorizedGroceryRequest): Promise<HttpResponse> => {
+      try {
+        let body: unknown;
+        try {
+          body = typeof req.body === 'string' && req.body.trim() !== '' ? JSON.parse(req.body) : undefined;
+        } catch {
+          body = undefined;
+        }
+        if (typeof body !== 'object' || body === null || Array.isArray(body)) {
+          return errorResponse({ code: 'INVALID_REQUEST', message: 'Request body must be a JSON object with "entries".' });
+        }
+        const result = await serviceFor(req.scope).updateEntries(req.pathParameters?.id, (body as { entries?: unknown }).entries);
         if (!result.ok) return errorResponse(result.error);
         const { groceryList, version, sourcePlanVersion } = result.value;
         return respond(200, { groceryList, version, sourcePlanVersion });

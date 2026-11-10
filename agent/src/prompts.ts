@@ -25,6 +25,8 @@ export interface PlanChunk {
   firstDay: number;
   /** Number of consecutive days in this chunk (≥ 1). */
   dayCount: number;
+  /** Dish names already chosen for these days (one per day, in order). */
+  assignedNames?: readonly string[];
 }
 
 export interface SystemPromptOptions {
@@ -57,7 +59,8 @@ function modeRules(mode: AgentMode, suggestionCount: number): string[] {
       return [
         'Task: plan one Meal per day for the days described in `days`, taking `contextInput` into account when present.',
         '`days.dayNumbers` lists the days this response covers. Return exactly `days.dayCount` Meals in `meals`, in that day order.',
-        'Vary cuisines and main ingredients across days.',
+        'Vary cuisines and main ingredients across days. Never repeat a dish.',
+        'If `days.assignedMeals` is present, the Meal for each listed day must be exactly that dish (same name), written out in full, in that day order.',
         'Respond with `mode` "plan".',
       ];
     case 'refine':
@@ -69,6 +72,16 @@ function modeRules(mode: AgentMode, suggestionCount: number): string[] {
         'If the request is ambiguous or cannot be applied, set `outcome` "clarification" and ask one short question in `message`; do not change anything.',
       ];
   }
+}
+
+/** System prompt for the plan outline call: one distinct dish name per day, nothing else. */
+export function buildPlanOutlineSystemPrompt(): string {
+  return [
+    ...COMMON_RULES,
+    'Task: choose one dish name per day for the days described in `days`, taking `contextInput` into account when present.',
+    'Return exactly `days.totalDays` names in `names`, in day order. Every name must be different, and the dishes must vary in cuisine and main ingredient. Names only, no recipes.',
+    'Respond with `mode` "plan_outline".',
+  ].join('\n');
 }
 
 /** System prompt for `mode`. Contains no request data. */
@@ -104,10 +117,15 @@ function planDays(rangeDays: number, chunk: PlanChunk | undefined) {
   if (!Number.isInteger(firstDay) || !Number.isInteger(dayCount) || firstDay < 1 || dayCount < 1 || firstDay + dayCount - 1 > rangeDays) {
     throw new RangeError(`plan chunk must lie within days 1..${rangeDays}.`);
   }
+  const dayNumbers = Array.from({ length: dayCount }, (_, i) => firstDay + i);
+  const assigned = chunk?.assignedNames;
   return {
     totalDays: rangeDays,
     dayCount,
-    dayNumbers: Array.from({ length: dayCount }, (_, i) => firstDay + i),
+    dayNumbers,
+    ...(assigned !== undefined && assigned.length === dayCount
+      ? { assignedMeals: dayNumbers.map((day, i) => ({ day, name: assigned[i] })) }
+      : {}),
   };
 }
 

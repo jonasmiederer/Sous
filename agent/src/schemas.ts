@@ -130,9 +130,10 @@ const REFINED_ARTIFACT: JsonSchema = {
 
 /**
  * Refine output is `updated` (with `artifact`) or `clarification` (with
- * `message`). Tool input schemas must have an object at the top level, so the
- * two outcomes are expressed with `if`/`then` rather than a top-level union;
- * the parser enforces the same rule regardless.
+ * `message`). Claude rejects `oneOf`/`allOf`/`anyOf` at the top level of a tool
+ * input schema (ValidationException), so the schema only lists the optional
+ * fields; the parser and the contract checks enforce which one each outcome
+ * needs and the repair call corrects violations.
  */
 export function refineResponseSchema(): JsonSchema {
   return {
@@ -145,10 +146,20 @@ export function refineResponseSchema(): JsonSchema {
     },
     required: ['mode', 'outcome'],
     additionalProperties: false,
-    allOf: [
-      { if: { properties: { outcome: { const: 'updated' } } }, then: { required: ['artifact'] } },
-      { if: { properties: { outcome: { const: 'clarification' } } }, then: { required: ['message'] } },
-    ],
+  };
+}
+
+/** Day-by-day dish names for a whole plan, generated before the per-chunk calls. */
+export function planOutlineSchema(dayCount: number): JsonSchema {
+  const n = clamp(dayCount, 1, SCHEMA_LIMITS.maxPlanDays);
+  return {
+    type: 'object',
+    properties: {
+      mode: { type: 'string', const: 'plan_outline' },
+      names: { type: 'array', items: text(SCHEMA_LIMITS.maxNameLength), minItems: n, maxItems: n },
+    },
+    required: ['mode', 'names'],
+    additionalProperties: false,
   };
 }
 

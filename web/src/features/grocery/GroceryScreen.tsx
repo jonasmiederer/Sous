@@ -7,13 +7,15 @@
  * how many are checked. Check state lives on the device (useGroceryChecks)
  * and resets whenever the list is regenerated.
  */
+import { useState } from 'react';
 import { Link, useParams } from 'react-router';
-import { Check, ChevronLeft, MessageSquare, RefreshCw, RotateCcw, ShoppingBasket } from 'lucide-react';
+import { Check, ChevronLeft, MessageSquare, Pencil, RefreshCw, RotateCcw, ShoppingBasket } from 'lucide-react';
 import { AsyncView, Button, EmptyState, ErrorBanner, cx } from '../../ui';
 import { useActiveHousehold } from '../../household/ActiveHouseholdProvider';
 import type { GroceryEntry, GroceryList } from '../../api/types';
 import { rangeLabel } from '../plans/dates';
 import { errorMessage, usePlan } from '../plans/planQueries';
+import { GroceryEditor } from './GroceryEditor';
 import { formatAmount, groceryEntryKey } from './format';
 import { useGenerateGroceryList, useGroceryList } from './groceryQueries';
 import { useGroceryChecks, type GroceryChecks } from './useGroceryChecks';
@@ -30,7 +32,8 @@ export interface GroceryScreenProps {
 }
 
 /** Explains what "Regenerate" does, including that it clears local check marks. */
-export const REGENERATE_HINT = 'Regenerating rebuilds the list from the current plan and what is in your fridge. Checked items are cleared.';
+export const REGENERATE_HINT =
+  'Regenerating rebuilds the list from the current plan and what is in your fridge. Checked items and your manual edits are cleared.';
 
 /** Route-level screen. A `null` list means none has been generated for this plan yet. */
 export function GroceryScreen({ planId: planIdProp, onRefine, indexHref = '/grocery', planHref = (id) => `/plans/${id}` }: GroceryScreenProps) {
@@ -112,6 +115,13 @@ function GroceryListView({ list, planId, regenerating, onRegenerate }: GroceryLi
   const rows = list.entries.map((entry, index) => ({ entry, key: groceryEntryKey(entry), index }));
   const toBuy = rows.filter((row) => !checks.isChecked(row.key));
   const done = rows.filter((row) => checks.isChecked(row.key));
+  const [editing, setEditing] = useState(false);
+
+  const editButton = (
+    <Button variant="secondary" onClick={() => setEditing(true)} icon={<Pencil aria-hidden="true" className="size-4" />} className="self-start">
+      Edit list
+    </Button>
+  );
 
   const regenerate = (
     <div className="flex flex-col gap-2 rounded-2xl border border-border bg-surface p-4">
@@ -123,6 +133,10 @@ function GroceryListView({ list, planId, regenerating, onRegenerate }: GroceryLi
     </div>
   );
 
+  if (editing) {
+    return <GroceryEditor planId={planId} entries={list.entries} onDone={() => setEditing(false)} />;
+  }
+
   if (rows.length === 0) {
     return (
       <div className="flex flex-col gap-4">
@@ -130,6 +144,7 @@ function GroceryListView({ list, planId, regenerating, onRegenerate }: GroceryLi
           icon={<ShoppingBasket />}
           title="Nothing to buy"
           description="This plan has no meals that need shopping, or your fridge already covers everything."
+          action={editButton}
         />
         {regenerate}
       </div>
@@ -139,6 +154,7 @@ function GroceryListView({ list, planId, regenerating, onRegenerate }: GroceryLi
   return (
     <div className="flex flex-col gap-6">
       <Progress done={done.length} total={rows.length} onReset={done.length > 0 ? checks.reset : undefined} />
+      {editButton}
 
       {toBuy.length > 0 ? (
         <section aria-labelledby="grocery-to-buy" className="flex flex-col gap-2">

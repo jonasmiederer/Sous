@@ -195,8 +195,15 @@ describe('generate: plan', () => {
   function chunkModel(failChunkStartingAt?: number) {
     return new FakeModelClient([], {
       fallback: (req) => {
-        const days = userData(req).days as { dayNumbers: number[] };
+        const days = userData(req).days as { dayNumbers: number[]; assignedMeals?: Array<{ day: number; name: string }> };
+        const props = (req.tool.inputSchema as { properties: Record<string, unknown> }).properties;
+        if ('names' in props) {
+          return okResult({ mode: 'plan_outline', names: days.dayNumbers.map((d) => `Dish ${d}`) });
+        }
         if (days.dayNumbers[0] === failChunkStartingAt) return okResult({ mode: 'plan', meals: [] });
+        if (days.assignedMeals !== undefined) {
+          return okResult({ mode: 'plan', meals: days.assignedMeals.map((a) => meal(a.name)) });
+        }
         return okResult({ mode: 'plan', meals: days.dayNumbers.map((d) => meal(`Day ${d}`)) });
       },
     });
@@ -209,9 +216,10 @@ describe('generate: plan', () => {
     if (!result.ok) return;
     expect(parseAgentResponseValue('plan', result.response).ok).toBe(true);
     expect((result.response as { meals: Array<{ name: string }> }).meals.map((m) => m.name)).toEqual(
-      Array.from({ length: 9 }, (_, i) => `Day ${i + 1}`),
+      Array.from({ length: 9 }, (_, i) => `Dish ${i + 1}`),
     );
-    expect(model.callCount).toBe(3);
+    // One outline call, then three concurrent chunks that each get their assigned dishes.
+    expect(model.callCount).toBe(4);
     expect(model.requests.map((r) => r.tool.inputSchema)).toContainEqual(
       expect.objectContaining({ properties: expect.objectContaining({ meals: expect.objectContaining({ minItems: 1, maxItems: 1 }) }) }),
     );

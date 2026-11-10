@@ -675,6 +675,7 @@ export class SousStack extends Stack {
       [plans, DELETE, '/plans/{id}'],
       [grocery, GET, '/plans/{id}/grocery-list'],
       [grocery, POST, '/plans/{id}/grocery-list'],
+      [grocery, PUT, '/plans/{id}/grocery-list'],
       [preferences, GET, '/preferences'],
       [preferences, POST, '/preferences/feedback'],
       [preferences, POST, '/preferences/acceptances'],

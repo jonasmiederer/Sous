@@ -39,6 +39,7 @@ import { sortKeys } from '../../data/keys.js';
 import type { HouseholdRepository, StoredRecord } from '../../data/repository.js';
 import { buildGroceryList } from '../../domain/grocery.js';
 import type { FridgeInventory, GroceryList, Ingredient, Meal, MealId, MealPlan, PlanId } from '../../domain/types.js';
+import { canonicalUnit } from '../../domain/units.js';
 import { toFridgeItems, toMealPlan, type PlanAttributes } from '../plans/records.js';
 import {
   GROCERY_ERROR_MESSAGES,
@@ -109,6 +110,31 @@ function toMeal(mealId: MealId, a: Record<string, unknown>): Meal | undefined {
   };
 }
 
+export const MAX_GROCERY_ENTRIES = 500;
+export const MAX_ENTRY_NAME_LENGTH = 120;
+
+/** Validates a manually edited entry list; names are trimmed and units canonicalised. */
+function parseEntries(value: unknown): { ok: true; entries: Ingredient[] } | { ok: false; message: string } {
+  if (!Array.isArray(value)) return { ok: false, message: '"entries" must be an array.' };
+  if (value.length > MAX_GROCERY_ENTRIES) {
+    return { ok: false, message: `"entries" must contain at most ${MAX_GROCERY_ENTRIES} items.` };
+  }
+  const entries: Ingredient[] = [];
+  for (const [i, raw] of value.entries()) {
+    const e = (typeof raw === 'object' && raw !== null ? raw : {}) as Record<string, unknown>;
+    const name = typeof e.name === 'string' ? e.name.trim().replace(/\s+/g, ' ') : '';
+    if (name.length === 0 || name.length > MAX_ENTRY_NAME_LENGTH) {
+      return { ok: false, message: `entries[${i}].name must be 1 to ${MAX_ENTRY_NAME_LENGTH} characters.` };
+    }
+    if (typeof e.quantity !== 'number' || !Number.isFinite(e.quantity) || e.quantity <= 0) {
+      return { ok: false, message: `entries[${i}].quantity must be a number greater than 0.` };
+    }
+    if (typeof e.unit !== 'string') return { ok: false, message: `entries[${i}].unit must be a string.` };
+    entries.push({ name, quantity: e.quantity, unit: canonicalUnit(e.unit) });
+  }
+  return { ok: true, entries };
+}
+
 function sourceVersionOf(record: StoredRecord): number {
   const v = record.attributes.sourcePlanVersion;
   return typeof v === 'number' && Number.isFinite(v) ? v : 0;
@@ -160,6 +186,46 @@ export class GroceryService {
       generatedAt: typeof a.generatedAt === 'string' ? a.generatedAt : '',
     };
     return { ok: true, value: { groceryList, version: record.version, sourcePlanVersion: sourceVersionOf(record) } };
+  }
+
+  /**
+   * PUT /plans/{id}/grocery-list: replace the list's entries with the user's
+   * manual edit (add, remove, change). The entries are stored as given (names
+   * trimmed, units canonicalised); consolidation is not re-run. `generatedAt`
+   * and `sourcePlanVersion` stay as they were, so the list is still tied to the
+   * plan version it came from and device-local check marks survive the edit.
+   * A later plan change regenerates the list and replaces manual edits, as it
+   * does for chat refinements.
+   */
+  async updateEntries(planId: unknown, entries: unknown): Promise<GroceryServiceResult<Omit<StoredGroceryList, 'created'>>> {
+    const sk = this.groceryListSortKey(planId);
+    if (sk === undefined) return groceryError('INVALID_REQUEST', GROCERY_ERROR_MESSAGES.invalidPlanId);
+    const parsed = parseEntries(entries);
+    if (!parsed.ok) return groceryError('INVALID_REQUEST', parsed.message);
+
+    for (let attempt = 0; attempt < this.maxWriteAttempts; attempt++) {
+      const record = await this.repo.get(sk);
+      if (record === undefined) return groceryError('GROCERY_LIST_NOT_FOUND', GROCERY_ERROR_MESSAGES.groceryListNotFound);
+
+      const attributes = { ...structuredClone(record.attributes), entries: parsed.entries.map((e) => ({ ...e })) };
+      const write = await this.repo.replaceIfVersion(sk, record.version, attributes);
+      if (write.ok) {
+        const groceryList: GroceryList = {
+          householdId: this.repo.householdId,
+          planId: planId as PlanId,
+          entries: parsed.entries,
+          generatedAt: typeof record.attributes.generatedAt === 'string' ? record.attributes.generatedAt : '',
+        };
+        return {
+          ok: true,
+          value: { groceryList, version: record.version + 1, sourcePlanVersion: sourceVersionOf(record) },
+        };
+      }
+      if (write.error.reason !== 'condition_failed') {
+        return groceryError('SAVE_DID_NOT_COMPLETE', GROCERY_ERROR_MESSAGES.saveDidNotComplete);
+      }
+    }
+    return groceryError('GROCERY_CONFLICT', GROCERY_ERROR_MESSAGES.conflict);
   }
 
   /** MealPlanChanged: rebuild an existing list from the current plan (7.5). */
