@@ -122,14 +122,19 @@ export class FridgeService {
   }
 
   /** PUT /fridge with `{ items: [{ name, quantity, unit }, ...] }`. */
-  async replaceInventory(input: { items?: unknown }): Promise<FridgeResult<ReplacedFridge>> {
+  async replaceInventory(input: { items?: unknown; clear?: unknown }): Promise<FridgeResult<ReplacedFridge>> {
     if (!Array.isArray(input.items)) return fail('INVALID_REQUEST', '"items" must be an array.');
     if (input.items.length > MAX_FRIDGE_ITEMS) {
       return fail('INVALID_REQUEST', `"items" must contain at most ${MAX_FRIDGE_ITEMS} entries.`);
     }
+    // An explicit `clear: true` with no items empties the fridge on purpose.
+    // Voice and other recordings never set it, so they keep the 4.4 guard.
+    const clearing = input.clear === true && input.items.length === 0;
     // Empty or all-invalid recordings are rejected before any storage access.
-    const probe = replaceFridgeInventory(this.deps.repository.householdId, undefined, input.items, '');
-    if (!probe.ok) return fail('NO_VALID_ITEMS', FRIDGE_ERROR_MESSAGES.noValidItems);
+    if (!clearing) {
+      const probe = replaceFridgeInventory(this.deps.repository.householdId, undefined, input.items, '');
+      if (!probe.ok) return fail('NO_VALID_ITEMS', FRIDGE_ERROR_MESSAGES.noValidItems);
+    }
 
     const items: readonly unknown[] = input.items;
     const state = { expired: false };
@@ -141,14 +146,18 @@ export class FridgeService {
       }, this.deadlineMs);
     });
     try {
-      const result = await Promise.race([this.write(items, state), timeout]);
+      const result = await Promise.race([this.write(items, state, clearing), timeout]);
       return result === TIMED_OUT ? fail('TIMEOUT', FRIDGE_ERROR_MESSAGES.timeout) : result;
     } finally {
       clearTimeout(timer);
     }
   }
 
-  private async write(items: readonly unknown[], state: { expired: boolean }): Promise<FridgeResult<ReplacedFridge>> {
+  private async write(
+    items: readonly unknown[],
+    state: { expired: boolean },
+    clearing = false,
+  ): Promise<FridgeResult<ReplacedFridge>> {
     const repo = this.deps.repository;
     const sk = sortKeys.fridge();
     for (let attempt = 1; attempt <= this.maxAttempts; attempt++) {
@@ -159,7 +168,10 @@ export class FridgeService {
         return fail('NOT_SAVED', FRIDGE_ERROR_MESSAGES.notSaved);
       }
       const prior = record ? toFridgeInventory(repo.householdId, record.attributes) : undefined;
-      const result = replaceFridgeInventory(repo.householdId, prior, items, this.clock.now().toISOString());
+      const now = this.clock.now().toISOString();
+      const result = clearing
+        ? { ok: true as const, inventory: { householdId: repo.householdId, items: [], updatedAt: now }, droppedIndexes: [] }
+        : replaceFridgeInventory(repo.householdId, prior, items, now);
       if (!result.ok) return fail('NO_VALID_ITEMS', FRIDGE_ERROR_MESSAGES.noValidItems);
 
       if (state.expired) return fail('TIMEOUT', FRIDGE_ERROR_MESSAGES.timeout);
