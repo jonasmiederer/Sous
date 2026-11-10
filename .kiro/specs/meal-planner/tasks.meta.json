@@ -1036,6 +1036,30 @@
         "chatSessionId": "sess_d938f875-22c8-4890-81d8-ff1e33ea8d91",
         "timestamp": 1794254118146
       }
+    ],
+    "27.1 Use `global.anthropic.claude-haiku-5-5` as the default model": [
+      {
+        "executionId": "6455fbbf-4595-434c-85c4-52f971aefae4",
+        "chatSessionId": "sess_d938f875-22c8-4890-81d8-ff1e33ea8d91",
+        "timestamp": 1794299280106
+      },
+      {
+        "executionId": "6455fbbf-4595-434c-85c4-52f971aefae4",
+        "chatSessionId": "sess_d938f875-22c8-4890-81d8-ff1e33ea8d91",
+        "timestamp": 1794299284827
+      },
+      {
+        "executionId": "6455fbbf-4595-434c-85c4-52f971aefae4",
+        "chatSessionId": "sess_d938f875-22c8-4890-81d8-ff1e33ea8d91",
+        "timestamp": 1794299410348
+      }
+    ],
+    "27. Switch the Suggestion_Agent default model to Claude Haiku 5.5": [
+      {
+        "executionId": "6455fbbf-4595-434c-85c4-52f971aefae4",
+        "chatSessionId": "sess_d938f875-22c8-4890-81d8-ff1e33ea8d91",
+        "timestamp": 1794299410412
+      }
     ]
   }
 }

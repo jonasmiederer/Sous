@@ -253,10 +253,10 @@ describe('SousStack', () => {
   });
 
   it('passes agentModelId and the preference strategy id to the runtime and rejects non-Claude ids', () => {
-    const t = synth({ agentModelId: 'us.anthropic.claude-haiku-4-5-20251001-v1:0', memoryPreferenceStrategyId: 'strat-1' });
+    const t = synth({ agentModelId: 'eu.anthropic.claude-haiku-5-5', memoryPreferenceStrategyId: 'strat-1' });
     t.hasResourceProperties('AWS::BedrockAgentCore::Runtime', {
       EnvironmentVariables: Match.objectLike({
-        MODEL_ID: 'us.anthropic.claude-haiku-4-5-20251001-v1:0',
+        MODEL_ID: 'eu.anthropic.claude-haiku-5-5',
         MEMORY_PREFERENCE_STRATEGY_ID: 'strat-1',
       }),
     });

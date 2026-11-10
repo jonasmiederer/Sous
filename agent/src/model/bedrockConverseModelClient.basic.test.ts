@@ -62,6 +62,39 @@ describe('BedrockConverseModelClient', () => {
       tools: [{ toolSpec: { name: 'submit_response', description: 'Submit the response.', inputSchema: { json: SCHEMA } } }],
       toolChoice: { tool: { name: 'submit_response' } },
     });
+    expect(input.additionalModelRequestFields).toBeUndefined();
+  });
+
+  it('disables adaptive thinking only for Claude Haiku 5.5 ids', () => {
+    const fields = (modelId: string) =>
+      new BedrockConverseModelClient({ modelId, sender: new RecordingSender(async () => output([])) }).buildCommandInput(
+        request(),
+      ).additionalModelRequestFields;
+    for (const id of [
+      'global.anthropic.claude-haiku-5-5',
+      'eu.anthropic.claude-haiku-5-5',
+      'anthropic.claude-haiku-5-5',
+    ]) {
+      expect(fields(id)).toEqual({ thinking: { type: 'disabled' } });
+    }
+    for (const id of [
+      'global.anthropic.claude-haiku-4-5-20251001-v1:0',
+      'global.anthropic.claude-sonnet-5-5',
+    ]) {
+      expect(fields(id)).toBeUndefined();
+    }
+  });
+
+  it('ignores extra content blocks such as reasoning next to the tool use', async () => {
+    const sender = new RecordingSender(async () =>
+      output([
+        { reasoningContent: { reasoningText: { text: 'hmm' } } },
+        { text: 'note' },
+        { toolUse: { toolUseId: 't2', name: 'submit_response', input: { mode: 'ad_hoc' } } },
+      ]),
+    );
+    const result = await new BedrockConverseModelClient({ modelId: 'm', sender }).generateStructured(request());
+    expect(result).toMatchObject({ ok: true, document: { mode: 'ad_hoc' }, toolUseId: 't2' });
   });
 
   it('maps repair turns to toolUse and error toolResult blocks', () => {

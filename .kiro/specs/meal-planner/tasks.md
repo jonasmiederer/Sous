@@ -635,6 +635,13 @@ All code is TypeScript. Property-test sub-tasks are marked optional with `*` but
 - [x] 26. Final checkpoint - backend, agent, and Client_App suites
   - Ensure all tests pass, ask the user if questions arise.
 
+- [x] 27. Switch the Suggestion_Agent default model to Claude Haiku 5.5
+  - [x] 27.1 Use `global.anthropic.claude-haiku-5-5` as the default model
+    - Verify against the Bedrock model card (https://docs.aws.amazon.com/bedrock/latest/userguide/model-card-anthropic-claude-haiku-5-5.html) and the Converse/thinking docs how to disable adaptive thinking (it is on by default and conflicts with the forced `toolChoice` of `submit_response`); set the verified field in `agent/src/model/bedrockConverseModelClient.ts` (for example through `additionalModelRequestFields`) only for models that need it, and update its unit test
+    - Change `DEFAULT_AGENT_MODEL_ID` in `infra/lib/sousStack.ts` and `agentModelId` in `cdk.json`; make sure `CLAUDE_MODEL_ID` and the IAM resources accept the id; update tests, `infra/README.md` and `README.md` mentions
+    - Update `docs/cost-estimate.md` with the verified Haiku 5.5 price (check an AWS source) and recalculate the tables
+    - _Requirements: 12.11, 8.2_
+
 ## Notes
 
 - Tasks marked with `*` are optional test sub-tasks and can be skipped for a faster MVP, but each maps to a specific correctness property or acceptance criterion for traceability.
@@ -665,7 +672,8 @@ All code is TypeScript. Property-test sub-tasks are marked optional with `*` but
     { "id": 11, "tasks": ["19.9", "19.10", "19.11", "19.12", "19.13", "19.14", "19.15", "22.9", "23.1", "23.3", "23.6", "23.7", "23.8", "23.9", "24.4", "25.3"] },
     { "id": 12, "tasks": ["19.2", "19.16", "23.2", "23.4", "23.5", "23.10", "23.11", "25.1"] },
     { "id": 13, "tasks": ["24.5", "25.4"] },
-    { "id": 14, "tasks": ["24.6", "25.5"] }
+    { "id": 14, "tasks": ["24.6", "25.5"] },
+    { "id": 15, "tasks": ["27.1"] }
   ]
 }
 ```

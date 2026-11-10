@@ -40,6 +40,17 @@ import {
 /** The SDK's JSON document type (tool inputs and input schemas). */
 type DocumentType = NonNullable<ToolUseBlock['input']>;
 
+/**
+ * Claude Haiku 5.5 runs adaptive thinking when the request omits `thinking`,
+ * and bills thinking tokens as output tokens. The agent needs a plain forced
+ * tool call, so send `thinking: { type: 'disabled' }` (allowed on Haiku 5.5 at
+ * effort high or below; effort is left at its default). Other models are left
+ * unchanged: Haiku 4.5 does not think by default, and some Claude 5 models
+ * (e.g. Sonnet 5.5) reject `disabled` with a 400. Source:
+ * https://docs.aws.amazon.com/bedrock/latest/userguide/claude-messages-adaptive-thinking.html
+ */
+const DISABLE_THINKING_MODEL = /(?:^|\.)anthropic\.claude-haiku-5-5(?:$|[:.-])/;
+
 /** Minimal surface of BedrockRuntimeClient used here, for injection in tests. */
 export interface ConverseSender {
   send(command: ConverseCommand, options?: { abortSignal?: AbortSignal }): Promise<ConverseCommandOutput>;
@@ -67,7 +78,7 @@ export class BedrockConverseModelClient implements ModelClient {
   buildCommandInput(request: StructuredRequest): ConverseCommandInput {
     const inferenceConfig: NonNullable<ConverseCommandInput['inferenceConfig']> = { maxTokens: request.maxTokens };
     if (request.temperature !== undefined) inferenceConfig.temperature = request.temperature;
-    return {
+    const input: ConverseCommandInput = {
       modelId: this.config.modelId,
       system: [{ text: request.system }],
       messages: request.messages.map(toConverseMessage),
@@ -85,6 +96,10 @@ export class BedrockConverseModelClient implements ModelClient {
         toolChoice: { tool: { name: request.tool.name } },
       },
     };
+    if (DISABLE_THINKING_MODEL.test(this.config.modelId)) {
+      input.additionalModelRequestFields = { thinking: { type: 'disabled' } };
+    }
+    return input;
   }
 
   async generateStructured(request: StructuredRequest): Promise<StructuredResult> {

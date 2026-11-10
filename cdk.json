@@ -7,7 +7,7 @@
   },
   "context": {
     "agentRuntimeMode": "asset",
-    "agentModelId": "global.anthropic.claude-haiku-4-5-20251001-v1:0",
+    "agentModelId": "global.anthropic.claude-haiku-5-5",
     "@aws-cdk/core:checkSecretUsage": true,
     "@aws-cdk/aws-iam:minimizePolicies": true
   }

@@ -169,12 +169,14 @@ const AGENT_IMAGE_EXCLUDE = [
 ];
 
 /**
- * Claude Haiku 4.5 through the global cross-Region inference profile, chosen
- * for latency (design.md, "Model"). Haiku 4.5 has no in-Region on-demand id; a
- * geo profile (us., eu., jp., au., in.) keeps requests in one geography.
- * Source: https://docs.aws.amazon.com/bedrock/latest/userguide/model-card-anthropic-claude-haiku-4-5.html
+ * Claude Haiku 5.5 through the global cross-Region inference profile, chosen
+ * for latency (design.md, "Model"). Haiku 5.5 has no in-Region on-demand id; a
+ * geo profile (us., ca., eu., au., jp.) keeps requests in one geography. The
+ * agent sends `thinking: disabled` for this model (adaptive thinking is on by
+ * default). Source:
+ * https://docs.aws.amazon.com/bedrock/latest/userguide/model-card-anthropic-claude-haiku-5-5.html
  */
-export const DEFAULT_AGENT_MODEL_ID = 'global.anthropic.claude-haiku-4-5-20251001-v1:0';
+export const DEFAULT_AGENT_MODEL_ID = 'global.anthropic.claude-haiku-5-5';
 /** An Anthropic Claude foundation model id, optionally prefixed by an inference-profile scope. */
 const CLAUDE_MODEL_ID = /^(?:[a-z]{2,6}\.)?anthropic\.claude-[a-z0-9.-]+(?::\d+)?$/;
 
