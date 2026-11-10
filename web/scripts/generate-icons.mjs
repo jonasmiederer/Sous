@@ -1,5 +1,5 @@
 // Generates the Sous app icons (PNG) into web/public/icons.
-// The mark is a bowl with a sprouting leaf on a herb-green rounded square.
+// The mark is a chef's toque (sous chef) on a herb-green rounded square.
 // Pure Node (zlib only) so it runs without image tooling:
 //   node web/scripts/generate-icons.mjs
 import { deflateSync } from 'node:zlib';
@@ -11,28 +11,45 @@ const outDir = join(dirname(fileURLToPath(import.meta.url)), '..', 'public', 'ic
 mkdirSync(outDir, { recursive: true });
 
 const BG = [0x2f, 0x6b, 0x3a];
-const FG = [0xff, 0xff, 0xff];
+const HAT = [0xfb, 0xf1, 0xe0];
+const BAND = [0xf5, 0xb9, 0x4e];
+const PLEAT = [0xb4, 0xc0, 0xa6];
 
 // All geometry is in unit coordinates (0..1) of the mark's own box.
-function inLeaf(x, y) {
-  // Vesica (intersection of two circles) along an axis tilted 40 degrees.
-  const cx = 0.57, cy = 0.3, a = (-45 * Math.PI) / 180;
-  const ux = Math.cos(a), uy = Math.sin(a); // leaf axis
-  const px = -uy, py = ux; // perpendicular
-  const R = 0.19, d = 0.125;
-  // Stem from the bowl rim up to the leaf base.
-  const stem = Math.abs(x - 0.5) <= 0.018 && y >= 0.36 && y <= 0.53;
-  if (stem) return true;
-  const dx1 = x - (cx + px * d), dy1 = y - (cy + py * d);
-  const dx2 = x - (cx - px * d), dy2 = y - (cy - py * d);
-  return dx1 * dx1 + dy1 * dy1 <= R * R && dx2 * dx2 + dy2 * dy2 <= R * R;
+const inCircle = (x, y, cx, cy, r) => (x - cx) ** 2 + (y - cy) ** 2 <= r * r;
+function inHat(x, y) {
+  // Three overlapping lobes plus a slightly tapered body.
+  if (inCircle(x, y, 0.22, 0.4, 0.16)) return true;
+  if (inCircle(x, y, 0.78, 0.4, 0.16)) return true;
+  if (inCircle(x, y, 0.5, 0.25, 0.2)) return true;
+  if (y >= 0.38 && y <= 0.8) {
+    const half = 0.3 - ((y - 0.38) / 0.42) * 0.04;
+    return Math.abs(x - 0.5) <= half;
+  }
+  return false;
 }
-function inBowl(x, y) {
-  const cx = 0.5, cy = 0.55, r = 0.3;
-  const rim = y >= cy - 0.03 && y <= cy + 0.025 && Math.abs(x - cx) <= r + 0.04;
-  const bowl = y >= cy && (x - cx) ** 2 + (y - cy) ** 2 <= r * r;
-  const base = y >= cy + r - 0.01 && y <= cy + r + 0.04 && Math.abs(x - cx) <= 0.12;
-  return rim || bowl || base;
+function inBand(x, y) {
+  const hw = 0.31, r = 0.03, y0 = 0.78, y1 = 0.93;
+  const qx = Math.max(Math.abs(x - 0.5) - (hw - r), 0);
+  const qy = Math.max(Math.abs(y - (y0 + y1) / 2) - ((y1 - y0) / 2 - r), 0);
+  return qx * qx + qy * qy <= r * r;
+}
+function nearSegment(x, y, x0, y0, x1, y1, w) {
+  const dx = x1 - x0, dy = y1 - y0;
+  const t = Math.max(0, Math.min(1, ((x - x0) * dx + (y - y0) * dy) / (dx * dx + dy * dy)));
+  return inCircle(x, y, x0 + t * dx, y0 + t * dy, w);
+}
+function inPleat(x, y) {
+  return (
+    nearSegment(x, y, 0.385, 0.5, 0.365, 0.74, 0.014) ||
+    nearSegment(x, y, 0.5, 0.5, 0.5, 0.74, 0.014) ||
+    nearSegment(x, y, 0.615, 0.5, 0.635, 0.74, 0.014)
+  );
+}
+function markColor(x, y) {
+  if (inBand(x, y)) return BAND;
+  if (inHat(x, y)) return inPleat(x, y) ? PLEAT : HAT;
+  return null;
 }
 function inRoundedSquare(x, y, radius) {
   const qx = Math.max(Math.abs(x - 0.5) - (0.5 - radius), 0);
@@ -48,7 +65,8 @@ function render(size, { maskable }) {
   for (let py = 0; py < size; py++) {
     raw[py * (size * 4 + 1)] = 0; // filter: none
     for (let px = 0; px < size; px++) {
-      let bgCov = 0, fgCov = 0;
+      let bgCov = 0;
+      const sum = [0, 0, 0];
       for (let sy = 0; sy < ss; sy++) {
         for (let sx = 0; sx < ss; sx++) {
           const x = (px + (sx + 0.5) / ss) / size;
@@ -57,16 +75,15 @@ function render(size, { maskable }) {
           if (!inBg) continue;
           bgCov++;
           const mx = (x - 0.5) / markScale + 0.5;
-          const my = (y - 0.5) / markScale + 0.5;
-          if (inLeaf(mx, my) || inBowl(mx, my)) fgCov++;
+          // Shift down slightly: the mark's visual centre sits near y = 0.49.
+          const my = (y - 0.5) / markScale + 0.51;
+          const c = markColor(mx, my) ?? BG;
+          sum[0] += c[0]; sum[1] += c[1]; sum[2] += c[2];
         }
       }
-      const n = ss * ss;
-      const alpha = bgCov / n;
-      const t = bgCov === 0 ? 0 : fgCov / bgCov;
       const o = py * (size * 4 + 1) + 1 + px * 4;
-      for (let c = 0; c < 3; c++) raw[o + c] = Math.round(BG[c] * (1 - t) + FG[c] * t);
-      raw[o + 3] = Math.round(alpha * 255);
+      for (let c = 0; c < 3; c++) raw[o + c] = bgCov === 0 ? 0 : Math.round(sum[c] / bgCov);
+      raw[o + 3] = Math.round((bgCov / (ss * ss)) * 255);
     }
   }
   return encodePng(size, size, raw);
