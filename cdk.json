@@ -7,8 +7,8 @@
   },
   "context": {
     "agentRuntimeMode": "asset",
-    "agentModelId": "global.amazon.nova-2-lite-v1:0",
-    "crossAccountModelRoleArn": "arn:aws:iam::677276073601:role/sous-bedrock-invoke-role",
+    "agentModelId": "global.anthropic.claude-haiku-4-5-20251001-v1:0",
+    "crossAccountModelRoleArn": "",
     "crossAccountModelId": "global.anthropic.claude-sonnet-5-5",
     "@aws-cdk/core:checkSecretUsage": true,
     "@aws-cdk/aws-iam:minimizePolicies": true
