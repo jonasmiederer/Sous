@@ -15,10 +15,12 @@ import { AsyncView, Button, Dialog, EmptyState, ErrorBanner, useToast } from '..
 import { InviteDialog } from './InviteDialog';
 import { HOUSEHOLDS_PATH, RoleBadge, ScreenHeader, errorText, membersQueryKey } from './shared';
 
+/** Email when known, otherwise the raw user id. */
 function displayName(member: MemberSummary): string {
   return member.email ?? member.userId;
 }
 
+/** "Joined <date>", or `undefined` when the timestamp is unparseable. */
 function joinedLabel(joinedAt: string): string | undefined {
   const date = new Date(joinedAt);
   return Number.isNaN(date.getTime()) ? undefined : `Joined ${date.toLocaleDateString(undefined, { dateStyle: 'medium' })}`;
@@ -29,6 +31,7 @@ export function canRemoveMember(currentUserId: string | undefined, ownerUserId: 
   return Boolean(currentUserId) && currentUserId === ownerUserId && member.role !== 'owner';
 }
 
+/** Member list for the active household, with owner-only invite and remove actions. */
 export function Members() {
   const api = useApi();
   const queryClient = useQueryClient();
@@ -50,6 +53,7 @@ export function Members() {
   const [removing, setRemoving] = useState(false);
   const [removeError, setRemoveError] = useState<string>();
 
+  /** Removes the member chosen in the confirmation dialog; on failure the dialog stays open with the error. */
   async function confirmRemove() {
     if (!toRemove) return;
     setRemoving(true);

@@ -46,6 +46,7 @@ function PreferencesLink({ active }: { active: boolean }) {
   );
 }
 
+/** App chrome (nav, header actions) wrapping the authenticated routes via `<Outlet>`. */
 function ShellLayout() {
   const { pathname } = useLocation();
   const { signOut } = useSession();
@@ -69,6 +70,11 @@ function ShellLayout() {
   );
 }
 
+/**
+ * The route tree. Nesting encodes access: `RedirectIfSignedIn` wraps the
+ * public auth routes, `RequireSession` the rest, and `RequireHousehold` the
+ * routes that also need an active household. Unknown paths redirect to `/`.
+ */
 export function AppRoutes() {
   return (
     <Routes>

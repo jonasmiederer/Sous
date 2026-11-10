@@ -24,6 +24,7 @@ import type { ConversationArtifactType, Ingredient } from '../../src/domain/type
 
 /** Maximum Context_Input length in code points (same as the calling services). */
 export const MAX_CONTEXT_INPUT_LENGTH = 500;
+/** Inclusive bounds for `rangeDays` in plan mode. */
 export const MIN_RANGE_DAYS = 1;
 export const MAX_RANGE_DAYS = 31;
 
@@ -33,6 +34,7 @@ export interface SoftPreferenceEntry {
   polarity?: string;
 }
 
+/** Optional extra carried on every mode: Soft_Preferences prefetched by the caller. */
 interface WithSoftPreferences {
   householdPreferenceMemory?: SoftPreferenceEntry[];
 }
@@ -42,11 +44,16 @@ export type PlanRequest = PlanPayload & WithSoftPreferences;
 export type RefineRequest = RefinePayload & WithSoftPreferences;
 export type AgentRequest = AdHocRequest | PlanRequest | RefineRequest;
 
+/** Either the validated request or a user-safe message describing the first problem found. */
 export type ParseResult = { ok: true; request: AgentRequest } | { ok: false; message: string };
 
 const ARTIFACT_TYPES: readonly ConversationArtifactType[] = ['suggestion', 'plan', 'grocery_list'];
 
+/** Thrown by the field validators below; caught and converted to a `ParseResult` failure. */
 class RequestError extends Error {}
+
+// Small validators. Each takes the raw value and a `path` (e.g. `priorTurns[2].role`)
+// so error messages point at the exact offending field.
 
 function fail(message: string): never {
   throw new RequestError(message);
@@ -77,6 +84,7 @@ function stringArray(value: unknown, path: string): string[] {
   return array(value, path).map((v, i) => string(v, `${path}[${i}]`));
 }
 
+/** Length in Unicode code points, so emoji and other astral characters count as one. */
 function codePointLength(value: string): number {
   let n = 0;
   for (const _ of value) n++;
@@ -135,6 +143,7 @@ function meal(value: unknown, path: string): AgentArtifactMeal {
   };
 }
 
+/** The artifact being refined; its shape depends on the `type` discriminator. */
 function currentArtifact(value: unknown): RefineCurrentArtifact {
   const o = object(value, 'currentArtifact');
   switch (o.type) {
@@ -165,6 +174,10 @@ function priorTurns(value: unknown): AgentConversationTurn[] {
   });
 }
 
+/**
+ * Validates the shared fields, then the mode-specific ones. Throws
+ * `RequestError` on the first problem; `parseAgentRequest` handles that.
+ */
 function parse(value: unknown): AgentRequest {
   const o = object(value, 'request');
   const mode = o.mode;
@@ -173,6 +186,7 @@ function parse(value: unknown): AgentRequest {
   }
 
   const householdId = validateHouseholdId(o.householdId);
+  // Memory is namespaced per household; a mismatch would let one household read another's memory.
   if (o.preferenceMemoryNamespace !== householdId) fail('preferenceMemoryNamespace must equal householdId.');
 
   const presetsResult = validatePresets(array(o.presets, 'presets'));
@@ -233,7 +247,10 @@ function parse(value: unknown): AgentRequest {
   }
 }
 
-/** Validate an already JSON-decoded request body. */
+/**
+ * Validate an already JSON-decoded request body.
+ * Never throws for bad input; unexpected (non-validation) errors are rethrown.
+ */
 export function parseAgentRequest(value: unknown): ParseResult {
   try {
     return { ok: true, request: parse(value) };

@@ -33,6 +33,7 @@ import {
 import { TranscriptDialog } from './TranscriptDialog';
 import { MAX_TRANSCRIPT_CODE_POINTS, buildSubmitVoiceRequest, formatCountdown, secondsLeft } from './voiceUpload';
 
+/** Creates a recorder; injectable so tests can supply a fake. */
 export type RecorderFactory = () => Recorder;
 
 export interface VoiceButtonProps {
@@ -50,12 +51,18 @@ export interface VoiceButtonProps {
   /** Called once the Transcript was confirmed and applied on the server. */
   onConfirmed: (response: ConfirmVoiceResponse) => void;
   disabled?: boolean;
+  /** Limit for the editable transcript, counted in code points. */
   maxTranscriptCodePoints?: number;
   variant?: IconButtonProps['variant'];
   /** For tests; defaults to the browser recorder. */
   createRecorder?: RecorderFactory;
 }
 
+/**
+ * Where the user is in the flow: idle -> recording -> uploading -> review
+ * (editing and confirming the transcript). `error` can follow recording,
+ * uploading, or confirming; `canRetry` says whether "Record again" is offered.
+ */
 type Phase =
   | { kind: 'idle' }
   | { kind: 'recording'; snapshot: RecorderSnapshot }
@@ -67,6 +74,7 @@ const GENERIC_UPLOAD_ERROR = "We couldn't process that recording. Please try rec
 /** Confirmation errors after which the recording can't be used any more. */
 const RECORD_AGAIN_CODES = new Set(['VOICE_EXPIRED', 'VOICE_NOT_FOUND', 'VOICE_ALREADY_CONFIRMED']);
 
+/** User-safe text for an API error; anything else gets the generic recording message. */
 function errorText(error: unknown): string {
   return isApiError(error) ? error.userMessage : GENERIC_UPLOAD_ERROR;
 }
@@ -76,6 +84,7 @@ function stopPropagation(event: SyntheticEvent) {
   event.stopPropagation();
 }
 
+/** Mic button that owns the whole record, review, and confirm flow described above. */
 export function VoiceButton({
   label,
   title,
@@ -89,6 +98,7 @@ export function VoiceButton({
 }: VoiceButtonProps) {
   const api = useApi();
   const [phase, setPhase] = useState<Phase>({ kind: 'idle' });
+  // Latest callbacks, read at call time, so async work started earlier never uses stale props.
   const callbacksRef = useRef(callbacks);
   callbacksRef.current = callbacks;
   const recorderRef = useRef<Recorder | null>(null);
@@ -97,12 +107,14 @@ export function VoiceButton({
   const mounted = useRef(true);
   const stopRef = useRef<HTMLButtonElement>(null);
 
+  /** Stops listening to the current recorder without cancelling it. */
   function detachRecorder() {
     unsubscribeRef.current?.();
     unsubscribeRef.current = null;
     recorderRef.current = null;
   }
 
+  /** Releases everything in flight: the recorder (and microphone) and any pending upload. */
   function teardown() {
     const recorder = recorderRef.current;
     detachRecorder();
@@ -121,6 +133,10 @@ export function VoiceButton({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  /**
+   * Resolves the target operation, uploads the audio, and moves to review.
+   * Results are dropped if the user cancelled or the component unmounted.
+   */
   async function upload(result: RecordingResult) {
     const controller = new AbortController();
     abortRef.current = controller;
@@ -139,6 +155,7 @@ export function VoiceButton({
     }
   }
 
+  /** Maps recorder states to dialog phases. Ignores events from a recorder that is no longer current. */
   function onSnapshot(recorder: Recorder, snapshot: RecorderSnapshot) {
     if (recorderRef.current !== recorder || !mounted.current) return;
     switch (snapshot.state) {
@@ -183,15 +200,22 @@ export function VoiceButton({
     void recorder.start();
   }
 
+  /** User pressed Stop; the recorder's `done` snapshot then triggers the upload. */
   function stopRecording() {
     void recorderRef.current?.stop();
   }
 
+  /** Cancel from any phase: nothing is applied. */
   function close() {
     teardown();
     setPhase({ kind: 'idle' });
   }
 
+  /**
+   * Sends the (possibly edited) transcript. If the recording is no longer
+   * usable (expired, missing, already confirmed) show an error; any other
+   * failure keeps the review dialog open so the text can be fixed.
+   */
   async function confirm(pending: PendingTranscript, transcript: string) {
     setPhase({ kind: 'review', pending, confirming: true });
     try {
@@ -245,6 +269,7 @@ export function VoiceButton({
   );
 }
 
+/** Dialog content for the recording, waiting, uploading, and error phases. */
 function RecordingBody({ phase }: { phase: Phase }) {
   if (phase.kind === 'error') {
     return (
@@ -295,6 +320,7 @@ function RecordingBody({ phase }: { phase: Phase }) {
   );
 }
 
+/** Dialog actions: Stop while recording; "Type instead"/"Record again" after an error. */
 function RecordingFooter({
   phase,
   stopRef,

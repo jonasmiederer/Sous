@@ -18,6 +18,7 @@ export interface CreateHouseholdProps {
   label?: string;
 }
 
+/** Name field plus Create button. Length is validated on submit; `maxLength` is looser so over-long input can still be seen and corrected. */
 export function CreateHousehold({ onCreated, label = 'New household name' }: CreateHouseholdProps) {
   const api = useApi();
   const queryClient = useQueryClient();

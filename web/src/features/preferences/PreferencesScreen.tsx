@@ -12,6 +12,7 @@ import { AsyncView, cx, useToast } from '../../ui';
 import { ConstraintForm } from './ConstraintForm';
 import { errorMessage, preferencesKey, usePreferences } from './preferenceQueries';
 
+/** Fallback shown when a household has no saved profile yet. */
 const EMPTY: Pick<PreferenceProfile, 'likes' | 'dislikes' | 'excludedIngredients' | 'dietaryConstraints'> = {
   likes: [],
   dislikes: [],
@@ -19,12 +20,14 @@ const EMPTY: Pick<PreferenceProfile, 'likes' | 'dislikes' | 'excludedIngredients
   dietaryConstraints: [],
 };
 
+/** Read-only view of likes/dislikes plus the editable dietary-needs form. */
 export function PreferencesScreen() {
   const preferences = usePreferences();
   const queryClient = useQueryClient();
   const toast = useToast();
   const { activeHouseholdId } = useActiveHousehold();
 
+  /** Writes the server's updated profile straight into the cache so the new constraint shows at once. */
   function onAdded(saved: SavedProfile) {
     queryClient.setQueryData<GetPreferencesResponse>(preferencesKey(activeHouseholdId), saved);
     toast.show({ tone: 'success', message: 'Dietary need added.' });
@@ -84,6 +87,7 @@ export function PreferencesScreen() {
   );
 }
 
+/** Titled card with an icon and description, one per preference group. */
 function Section({ title, icon, description, children }: { title: string; icon: ReactNode; description: string; children: ReactNode }) {
   return (
     <section aria-label={title} className="flex flex-col gap-3 rounded-2xl border border-border bg-surface p-4 shadow-card sm:p-5">
@@ -107,6 +111,7 @@ const TAG_TONES = {
   danger: 'border-danger/40 bg-danger-soft text-danger',
 } as const;
 
+/** Pills of strings in a given tone. Renders the `empty` text (or nothing) when the list is empty. */
 function TagList({ label, items, tone, empty }: { label: string; items: readonly string[]; tone: keyof typeof TAG_TONES; empty?: string }) {
   if (items.length === 0) return empty ? <p className="text-sm text-text-muted">{empty}</p> : null;
   return (

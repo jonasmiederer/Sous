@@ -21,6 +21,7 @@ import { MAX_PLAN_DAYS, MIN_PLAN_DAYS, PLAN_CONTEXT_MAX, WEEK_DAYS, isIsoDate } 
 export { PLAN_CONTEXT_MAX };
 import { errorCode, errorMessage, planIds, planKey, plansListKey, usePlansList } from './planQueries';
 
+/** Shown when generation timed out and a follow-up check found no saved plan. */
 export const TIMEOUT_NOT_SAVED_MESSAGE =
   'Sous took too long to build this plan and it wasn’t saved. Please try again, or try fewer days.';
 
@@ -35,6 +36,7 @@ export interface NewPlanFormValues {
   presets: Preset[];
 }
 
+/** Either a ready-to-send request, or per-field error messages (`presets: 'conflict'` is a flag, not display text). */
 export type NewPlanValidation = { ok: true; request: GeneratePlanRequest; dayCount: number } | { ok: false; errors: Partial<Record<'days' | 'startDate' | 'contextInput' | 'presets', string>> };
 
 export const DAYS_ERROR = `Choose between ${MIN_PLAN_DAYS} and ${MAX_PLAN_DAYS} days.`;
@@ -86,6 +88,7 @@ export function findSavedPlan(
 interface GenerateVariables {
   request: GeneratePlanRequest;
   dayCount: number;
+  /** Plan ids known before submitting, or `null` if the list was never loaded. Used to spot a plan saved after a timeout. */
   knownIds: string[] | null;
 }
 
@@ -94,6 +97,7 @@ export interface NewPlanProps {
   planHref?: (planId: string) => string;
 }
 
+/** The plan-creation screen: form while idle, progress while generating. */
 export function NewPlan({ planHref = (id) => `/plans/${id}` }: NewPlanProps) {
   const api = useApi();
   const queryClient = useQueryClient();
@@ -102,6 +106,8 @@ export function NewPlan({ planHref = (id) => `/plans/${id}` }: NewPlanProps) {
   const { activeHouseholdId } = useActiveHousehold();
   const plansList = usePlansList();
 
+  // Generation can outlive this screen. Track mount state so a finished plan
+  // navigates directly if the user is still here, or shows a toast with a link if not.
   const mounted = useRef(true);
   useEffect(() => {
     mounted.current = true;
@@ -116,6 +122,7 @@ export function NewPlan({ planHref = (id) => `/plans/${id}` }: NewPlanProps) {
   const validation = validateNewPlan(values);
   const fieldErrors = !validation.ok && submitted ? validation.errors : {};
 
+  /** Announces a finished plan: navigate if still on this screen, otherwise a persistent toast with a "View plan" action. */
   function planReady(planId: string, message: string) {
     if (mounted.current) {
       navigate(planHref(planId));

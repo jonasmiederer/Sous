@@ -33,6 +33,8 @@ The Suggestion_Agent runs on Amazon Bedrock AgentCore.
 | Events | EventBridge (grocery list regeneration, invitation expiry sweep) |
 | IaC | AWS CDK v2 (TypeScript) |
 
+For how the pieces fit together (request path, code layers and design rules), see [docs/architecture.md](docs/architecture.md).
+
 ## Repository layout
 
 ```

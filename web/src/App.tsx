@@ -31,9 +31,15 @@ export function AppRoot({ services }: { services: AppServices }) {
   );
 }
 
+/** Config-loading lifecycle for the initial boot. */
 type BootState = { kind: 'loading' } | { kind: 'ready'; services: AppServices } | { kind: 'error' };
 
 /** Loads `/config.json`, builds the app services once, and mounts the app. */
+/**
+ * Boot sequence. Shows a spinner while config loads, an error with retry if it
+ * fails, and the app once services are built. `attempt` bumps to re-run the
+ * effect on retry.
+ */
 export default function App() {
   const [attempt, setAttempt] = useState(0);
   const [state, setState] = useState<BootState>({ kind: 'loading' });

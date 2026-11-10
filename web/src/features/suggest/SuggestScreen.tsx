@@ -31,6 +31,7 @@ import { isContextInputTooLong, presetConflict } from './validation';
 /** Placeholder cards while the first suggestions load (the agent returns 2 by default). */
 const LOADING_CARDS = 2;
 
+/** Shown when the learned (soft) preferences could not be loaded for this response. */
 export const DEGRADED_MESSAGE =
   "Your household's learned tastes couldn't be loaded this time, so these ideas use your saved preferences only.";
 
@@ -64,17 +65,22 @@ interface SessionState {
   rejectedIds: string[];
 }
 
+/** Extra information returned with the latest suggestions. */
 interface ResultMeta {
+  /** Server message about the result, shown above the cards. */
   notice?: string;
   softPreferencesDegraded: boolean;
 }
 
+/** A user-facing error plus the action that retries the failed request. */
 type ScreenError = { message: string; retry: () => void };
 
+/** User-safe error text; non-API errors map to the generic internal error. */
 function errorMessage(error: unknown): string {
   return isApiError(error) ? error.userMessage : messageFor('INTERNAL_ERROR');
 }
 
+/** Case- and whitespace-insensitive form used to detect duplicate meal names. */
 function normalizeName(name: string): string {
   return name.trim().toLowerCase();
 }
@@ -121,6 +127,11 @@ function SuggestScreenInner({ onRefine, renderVoiceAction, refinedSuggestion }: 
   const tooLong = isContextInputTooLong(context);
   const canSubmit = !conflict && !tooLong && !busy;
 
+  /**
+   * Sends a suggest request, aborting any one still in flight. Resolves to
+   * `null` when the call was superseded or aborted, so callers must return
+   * without touching state in that case.
+   */
   const callSuggest = useCallback(
     async (body: SuggestRequest): Promise<{ ok: true; value: SuggestResponse } | { ok: false; error: unknown } | null> => {
       abort.current?.abort();
@@ -137,6 +148,7 @@ function SuggestScreenInner({ onRefine, renderVoiceAction, refinedSuggestion }: 
     [api],
   );
 
+  /** Adopts a brand-new session: stores it, clears per-card state, and moves focus to the results heading. */
   function applyFresh(response: SuggestResponse, snapshot: Omit<SessionState, 'sessionId' | 'rejectedIds'>) {
     setSession({ ...snapshot, sessionId: response.sessionId, rejectedIds: [] });
     setSuggestions(response.suggestions);
@@ -148,6 +160,7 @@ function SuggestScreenInner({ onRefine, renderVoiceAction, refinedSuggestion }: 
     requestAnimationFrame(() => resultsHeading.current?.focus());
   }
 
+  /** First request of a session (no `sessionId`); discards any previous results. */
   async function startSession(snapshot: Omit<SessionState, 'sessionId' | 'rejectedIds'>) {
     setLoading(true);
     setError(null);
@@ -186,6 +199,11 @@ function SuggestScreenInner({ onRefine, renderVoiceAction, refinedSuggestion }: 
     }
   }
 
+  /**
+   * "Not for me": records the rejection, asks for new ideas in the same
+   * session, and swaps in the first result that is not already shown,
+   * rejected, or a name duplicate. With no such result the card is removed.
+   */
   async function reject(suggestion: SuggestionView) {
     if (!session || busy) return;
     const next: SessionState = { ...session, rejectedIds: [...new Set([...session.rejectedIds, suggestion.suggestionId])] };
@@ -221,6 +239,7 @@ function SuggestScreenInner({ onRefine, renderVoiceAction, refinedSuggestion }: 
     }
   }
 
+  /** Like/dislike. The pending value shows immediately and is only confirmed once the API call succeeds. */
   async function sendFeedback(suggestion: SuggestionView, value: FeedbackValue) {
     const id = suggestion.suggestionId;
     if (pendingFeedback[id] || feedback[id] === value) return;
@@ -369,6 +388,7 @@ function SuggestScreenInner({ onRefine, renderVoiceAction, refinedSuggestion }: 
   );
 }
 
+/** Builds the follow-up request for an existing session, replaying its note, Presets, and rejected ids. */
 function sessionRequest(session: SessionState): SuggestRequest {
   return {
     sessionId: session.sessionId,
@@ -378,6 +398,7 @@ function sessionRequest(session: SessionState): SuggestRequest {
   };
 }
 
+/** Subdued informational message with an icon. */
 function InfoNote({ children }: { children: ReactNode }) {
   return (
     <p className="flex items-start gap-2 rounded-2xl bg-surface-2 px-4 py-3 text-sm text-text-muted">

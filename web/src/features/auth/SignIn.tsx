@@ -8,6 +8,7 @@ import { safeReturnPath, type SignInLocationState } from '../../auth/RequireSess
 import { Button, ErrorBanner, TextField } from '../../ui';
 import { AuthLayout, LINK_CLASS, Notice } from './AuthLayout';
 
+/** Shown when Cognito answers with a challenge (e.g. NEW_PASSWORD_REQUIRED) this app cannot complete. */
 export const CHALLENGE_MESSAGE =
   "This account needs an extra sign-in step that the Sous app doesn't support yet, such as setting a new password. Ask whoever manages your account for help.";
 
@@ -23,6 +24,12 @@ export function lockoutMessage(retryAfterSeconds: number | undefined): string {
   return `Too many sign-in attempts. Try again in ${minutes} minute${minutes === 1 ? '' : 's'}.`;
 }
 
+/**
+ * Email + password sign-in form. On success it returns the user to the page
+ * they were sent from (validated by `safeReturnPath` to avoid open redirects).
+ * Router state can prefill the email after confirmation and explain why the
+ * user landed here (e.g. an expired session).
+ */
 export function SignIn() {
   const api = useApi();
   const { completeSignIn } = useSession();
@@ -48,6 +55,7 @@ export function SignIn() {
     setError(undefined);
     try {
       const response = await api.login({ identifier, password });
+      // `completeSignIn` returns false when the response is a challenge rather than tokens.
       if (completeSignIn(response)) {
         navigate(safeReturnPath(state.from), { replace: true });
         return;
