@@ -98,12 +98,24 @@ describe('Fridge editor', () => {
     expect(screen.getByText('All changes saved')).toBeInTheDocument();
   });
 
-  it('blocks saving when no row is a valid item', async () => {
+  it('empties the fridge with an explicit clear when every row is removed', async () => {
     const user = userEvent.setup();
     const { puts } = renderEditor({ [`GET ${FRIDGE_URL}`]: { body: inventory([{ name: 'milk', quantity: 1, unit: 'l' }]) } });
 
     await user.click(await screen.findByRole('button', { name: 'Remove milk' }));
     expect(screen.getByText('Your fridge is empty')).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Save fridge' }));
+
+    await waitFor(() => expect(puts()).toHaveLength(1));
+    expect(puts()[0]!.body).toEqual({ items: [], clear: true });
+  });
+
+  it('blocks saving when rows are filled in but none is a valid item', async () => {
+    const user = userEvent.setup();
+    const { puts } = renderEditor({ [`GET ${FRIDGE_URL}`]: { body: inventory([{ name: 'milk', quantity: 1, unit: 'l' }]) } });
+
+    const quantity = await screen.findByLabelText(/Amount of milk/);
+    await user.clear(quantity);
     await user.click(screen.getByRole('button', { name: 'Save fridge' }));
 
     expect(screen.getByRole('alert')).toHaveTextContent('Add at least one item with a name and an amount above 0.');

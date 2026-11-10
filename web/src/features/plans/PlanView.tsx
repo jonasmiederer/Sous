@@ -10,7 +10,7 @@
  * - `planId` defaults to the `:planId` route param.
  */
 import { useMemo, useState } from 'react';
-import { Link, useParams } from 'react-router';
+import { Link, useNavigate, useParams } from 'react-router';
 import { useQueryClient } from '@tanstack/react-query';
 import { ArrowLeft, CalendarPlus, MessageCircle, Plus, Repeat2, ShoppingBasket, Trash2 } from 'lucide-react';
 import { useActiveHousehold } from '../../household/ActiveHouseholdProvider';
@@ -19,6 +19,7 @@ import type { IsoDate, Meal, PlanEditResult, StoredPlan } from '../../api/types'
 import { AsyncView, Button, ErrorBanner, SkeletonList, cx, useToast } from '../../ui';
 import { BUTTON_BASE, BUTTON_VARIANTS } from '../../ui/Button';
 import { DayEditor, type DayEditorMode } from './DayEditor';
+import { DeletePlanDialog } from './DeletePlanDialog';
 import { addableDays, dateRange, dayCountLabel, rangeLabel, shortDateLabel, weekdayLabel } from './dates';
 import { applyPlanEdit, errorMessage, planKey, plansListKey, usePlan } from './planQueries';
 
@@ -76,6 +77,7 @@ export function PlanView({ planId: planIdProp, onRefineDay, onOpenGrocery, groce
             onRefineDay={onRefineDay}
             onOpenGrocery={onOpenGrocery}
             groceryHref={groceryHref}
+            plansHref={plansHref}
           />
         )}
       </AsyncView>
@@ -90,10 +92,13 @@ interface PlanDetailProps {
   onRefineDay: PlanViewProps['onRefineDay'];
   onOpenGrocery: PlanViewProps['onOpenGrocery'];
   groceryHref: (planId: string) => string;
+  plansHref: string;
 }
 
-function PlanDetail({ stored, refetch, refetching, onRefineDay, onOpenGrocery, groceryHref }: PlanDetailProps) {
+function PlanDetail({ stored, refetch, refetching, onRefineDay, onOpenGrocery, groceryHref, plansHref }: PlanDetailProps) {
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
+  const [deleting, setDeleting] = useState(false);
   const toast = useToast();
   const { activeHouseholdId } = useActiveHousehold();
   const [editor, setEditor] = useState<EditorState | null>(null);
@@ -112,6 +117,13 @@ function PlanDetail({ stored, refetch, refetching, onRefineDay, onOpenGrocery, g
     setEditor(null);
     setConflict(false);
     toast.show({ message: CHANGE_MESSAGES[result.change], tone: 'success' });
+  }
+
+  function onDeleted() {
+    queryClient.removeQueries({ queryKey: planKey(activeHouseholdId, plan.planId) });
+    void queryClient.invalidateQueries({ queryKey: plansListKey(activeHouseholdId) });
+    toast.show({ message: 'Plan deleted.', tone: 'success' });
+    navigate(plansHref);
   }
 
   const groceryClass = cx(BUTTON_BASE, BUTTON_VARIANTS.secondary, 'min-h-11 px-4 text-sm');
@@ -186,6 +198,23 @@ function PlanDetail({ stored, refetch, refetching, onRefineDay, onOpenGrocery, g
           Add a day
         </Button>
       )}
+
+      <Button
+        variant="ghost"
+        icon={<Trash2 aria-hidden="true" className="size-4" />}
+        className="self-start"
+        onClick={() => setDeleting(true)}
+      >
+        Delete plan
+      </Button>
+
+      <DeletePlanDialog
+        open={deleting}
+        planId={plan.planId}
+        label={rangeLabel(plan.startDate, plan.endDate)}
+        onClose={() => setDeleting(false)}
+        onDeleted={onDeleted}
+      />
 
       <DayEditor
         open={editor !== null}
