@@ -640,6 +640,7 @@ export class SousStack extends Stack {
       [plans, PUT, '/plans/{id}/days/{day}'],
       [plans, POST, '/plans/{id}/days'],
       [plans, DELETE, '/plans/{id}/days/{day}'],
+      [plans, DELETE, '/plans/{id}'],
       [grocery, GET, '/plans/{id}/grocery-list'],
       [grocery, POST, '/plans/{id}/grocery-list'],
       [preferences, GET, '/preferences'],
@@ -826,10 +827,6 @@ export class SousStack extends Stack {
       }),
     );
 
-    // MMDSv2: the AgentCore control-plane API has `metadataConfiguration.requireMMDSV2`
-    // (required for invocations from June 30, 2026), but neither CfnRuntime in
-    // aws-cdk-lib 2.275.0 nor the AWS::BedrockAgentCore::Runtime CloudFormation
-    // schema exposes it yet, so it is not set here. See infra/README.md.
     const runtime = new agentcore.CfnRuntime(this, 'SuggestionAgentRuntime', {
       agentRuntimeName: 'sous_suggestion_agent',
       description: 'Sous Suggestion_Agent (meal suggestions, plans and chat refinement).',

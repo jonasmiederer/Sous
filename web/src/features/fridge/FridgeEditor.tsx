@@ -98,10 +98,12 @@ function FridgeForm({ data, renderVoiceAction }: { data: GetFridgeResponse; rend
   }, [serverSignature]);
 
   const save = useMutation({
-    mutationFn: (items: Ingredient[]) => api.putFridge({ items }),
+    mutationFn: (items: Ingredient[]) => api.putFridge(items.length === 0 ? { items, clear: true } : { items }),
   });
 
-  const canSave = hasValidRow(rows);
+  // Emptying the fridge on purpose (every row removed or blank) is allowed.
+  const clearing = rows.every(isBlankRow);
+  const canSave = hasValidRow(rows) || clearing;
   const atLimit = rows.length >= MAX_FRIDGE_ROWS;
 
   function update(key: string, patch: Partial<FridgeRow>) {

@@ -84,7 +84,10 @@ export function createFridgeHandlers(serviceFor: FridgeServiceFor) {
       guarded(async () => {
         const body = parseBody(req.body);
         if (!body.ok) return errorResponse(body.error);
-        const result = await serviceFor(req.scope).replaceInventory({ items: body.value.items });
+        const result = await serviceFor(req.scope).replaceInventory({
+          items: body.value.items,
+          clear: body.value.clear,
+        });
         return result.ok ? respond(200, result.value) : errorResponse(result.error);
       }),
   };

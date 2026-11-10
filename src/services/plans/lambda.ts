@@ -41,6 +41,7 @@ function build(): (event: AuthorizedApiEvent) => Promise<HttpResponse> {
       'PUT /plans/{id}/days/{day}': asPlanRoute(plans.replaceDay),
       'POST /plans/{id}/days': asPlanRoute(plans.addDay),
       'DELETE /plans/{id}/days/{day}': asPlanRoute(plans.removeDay),
+      'DELETE /plans/{id}': asPlanRoute(plans.deletePlan),
       'GET /plans': asPlanRoute(plans.listPlans),
       'GET /plans/{id}': asPlanRoute(plans.getPlan),
     }),

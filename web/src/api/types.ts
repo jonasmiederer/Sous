@@ -294,6 +294,8 @@ export interface SavedFridge {
 export type GetFridgeResponse = SavedFridge | { inventory: null };
 
 export interface PutFridgeRequest {
+  /** Set with an empty `items` to deliberately empty the fridge. */
+  clear?: boolean;
   items: Ingredient[];
 }
 

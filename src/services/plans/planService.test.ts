@@ -280,6 +280,22 @@ describe('day edits', () => {
     expect((await repo.get(sortKeys.plan(plan.planId)))?.version).toBe(1);
   });
 
+  it('deletes a whole plan and its grocery list, keeping Meal records and emitting no event', async () => {
+    const plan = await weeklyPlan();
+    await repo.create(sortKeys.grocery(plan.planId), { planId: plan.planId, items: [] });
+    events.events.length = 0;
+
+    const result = await service().deletePlan(plan.planId);
+    expect(result).toEqual({ ok: true, value: { planId: plan.planId } });
+    expect(await repo.get(sortKeys.plan(plan.planId))).toBeUndefined();
+    expect(await repo.get(sortKeys.grocery(plan.planId))).toBeUndefined();
+    expect(table.dump().filter((i) => i.SK.startsWith('MEAL#')).length).toBeGreaterThan(0);
+    expect(events.events).toHaveLength(0);
+
+    expect(await service().deletePlan(plan.planId)).toMatchObject({ ok: false, error: { code: 'PLAN_NOT_FOUND' } });
+    expect(await service().deletePlan('a#b')).toMatchObject({ ok: false, error: { code: 'INVALID_REQUEST' } });
+  });
+
   it('removes a day, keeping the range, and emits day_removed', async () => {
     const plan = await weeklyPlan();
     const result = await service().removeDay(plan.planId, '2025-03-11');

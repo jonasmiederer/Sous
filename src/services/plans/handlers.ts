@@ -5,6 +5,7 @@
  *   PUT    /plans/{id}/days/{day}  { meal? , contextInput?, presets? }  replace one day's Meal
  *   POST   /plans/{id}/days        { day, meal?, contextInput?, presets? } add a Meal on a day
  *   DELETE /plans/{id}/days/{day}                                         remove a day's Meal
+ *   DELETE /plans/{id}                                                    delete the plan and its grocery list
  *   GET    /plans                                                         newest 20 plan summaries
  *   GET    /plans/{id}                                                    { plan, meals, version }
  *
@@ -130,6 +131,12 @@ export function createPlanHandlers(serviceFor: PlanServiceFor) {
       guarded(async () => {
         const result = await serviceFor(req.scope).removeDay(req.pathParameters?.id, req.pathParameters?.day);
         return result.ok ? respond(200, editBody(result.value)) : errorResponse(result.error);
+      }),
+
+    deletePlan: (req: AuthorizedPlanRequest): Promise<HttpResponse> =>
+      guarded(async () => {
+        const result = await serviceFor(req.scope).deletePlan(req.pathParameters?.id);
+        return result.ok ? respond(200, result.value) : errorResponse(result.error);
       }),
 
     listPlans: (req: AuthorizedPlanRequest): Promise<HttpResponse> =>

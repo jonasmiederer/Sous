@@ -75,6 +75,7 @@ export const ROUTES = {
   replaceDay: { method: 'PUT', route: '/plans/{id}/days/{day}', access: 'household', timeoutMs: 17_000 },
   addDay: { method: 'POST', route: '/plans/{id}/days', access: 'household', timeoutMs: 17_000 },
   removeDay: { method: 'DELETE', route: '/plans/{id}/days/{day}', access: 'household', timeoutMs: 17_000 },
+  deletePlan: { method: 'DELETE', route: '/plans/{id}', access: 'household', timeoutMs: S10 },
 
   generateGroceryList: { method: 'POST', route: '/plans/{id}/grocery-list', access: 'household', timeoutMs: S10 },
   getGroceryList: { method: 'GET', route: '/plans/{id}/grocery-list', access: 'household', timeoutMs: S10 },
@@ -154,6 +155,8 @@ export function createEndpoints(client: ApiClient) {
       call<PlanEditResult>('addDay', { id: planId }, body, o),
     removeDay: (planId: string, day: string, o?: CallOptions) =>
       call<PlanEditResult>('removeDay', { id: planId, day }, undefined, o),
+    deletePlan: (planId: string, o?: CallOptions) =>
+      call<{ planId: string }>('deletePlan', { id: planId }, undefined, o),
 
     // Grocery
     generateGroceryList: (planId: string, o?: CallOptions) =>

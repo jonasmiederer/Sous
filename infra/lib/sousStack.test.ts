@@ -74,7 +74,7 @@ describe('SousStack', () => {
     );
     expect(byKey['POST /auth/login']).toBe('NONE');
     const others = Object.entries(byKey).filter(([k]) => k !== 'POST /auth/login');
-    expect(others.length).toBe(27);
+    expect(others.length).toBe(28);
     for (const [, type] of others) expect(type).toBe('JWT');
     for (const key of [
       'GET /households',

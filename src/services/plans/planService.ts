@@ -287,6 +287,34 @@ export class PlanService {
   }
 
   // -------------------------------------------------------------------------
+  // DELETE /plans/{id}
+  // -------------------------------------------------------------------------
+
+  /**
+   * Deletes a whole plan together with its grocery list in one transaction.
+   * Meal records are kept (Feedback or acceptances may reference them). No
+   * MealPlanChanged event is published: there is no plan left for the grocery
+   * consumer to regenerate a list for. The delete is conditional on the plan
+   * existing, so a concurrent delete reports PLAN_NOT_FOUND.
+   */
+  async deletePlan(planId: unknown): Promise<PlanResult<{ planId: string }>> {
+    if (typeof planId !== 'string' || planId.length === 0 || planId.includes('#')) {
+      return planError('INVALID_REQUEST', 'planId is invalid.');
+    }
+    const stored = await this.deps.repository.get<PlanAttributes>(sortKeys.plan(planId));
+    if (!stored) return planError('PLAN_NOT_FOUND', 'Meal plan not found.');
+    const written = await this.deps.repository.transact([
+      { kind: 'delete', sk: sortKeys.plan(planId), condition: { kind: 'mustExist' } },
+      { kind: 'delete', sk: sortKeys.grocery(planId) },
+    ]);
+    if (!written.ok) {
+      if (written.error.reason === 'condition_failed') return planError('PLAN_NOT_FOUND', 'Meal plan not found.');
+      return saveFailure(written, false);
+    }
+    return { ok: true, value: { planId } };
+  }
+
+  // -------------------------------------------------------------------------
   // GET /plans
   // -------------------------------------------------------------------------
 

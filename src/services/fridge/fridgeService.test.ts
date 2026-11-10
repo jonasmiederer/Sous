@@ -96,6 +96,17 @@ describe('fridge handlers', () => {
     expect(parse(otherGet.body)).toEqual({ inventory: null });
   });
 
+  it('empties the fridge on an explicit clear, but not on a plain empty recording', async () => {
+    await service.replaceInventory({ items: [{ name: 'eggs', quantity: 6, unit: 'piece' }] });
+    const r = await service.replaceInventory({ items: [], clear: true });
+    expect(r).toMatchObject({ ok: true, value: { inventory: { items: [] } } });
+    const got = await service.getInventory();
+    expect(got).toMatchObject({ ok: true, value: { inventory: { items: [] } } });
+    // clear is ignored when items are present
+    const bad = await service.replaceInventory({ items: [{ name: 'x', quantity: 0, unit: 'g' }], clear: true });
+    expect(bad).toMatchObject({ ok: false, error: { code: 'NO_VALID_ITEMS' } });
+  });
+
   it('maps an empty recording to 400 NO_VALID_ITEMS and bad JSON to 400 INVALID_REQUEST', async () => {
     const handlers = createFridgeHandlers(fridgeServiceFactory({ tableClient: table, clock }));
     const empty = await handlers.replaceInventory({ scope, body: '{"items":[]}' });
