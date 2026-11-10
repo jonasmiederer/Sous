@@ -4,7 +4,7 @@
 
 Synth does not need Docker. The Suggestion_Agent and the Voice Lambda are Docker image assets (see below), and CDK only stages their build contexts in `cdk.out/` during synth. `cdk deploy` builds and pushes both images, so deploying needs a running Docker daemon with linux/arm64 build support (native on Apple silicon; on x86 hosts, QEMU emulation through `docker buildx`).
 
-Nothing in this repository deploys. To deploy, run `npm run build && npm run build:web && npx cdk deploy Sous` yourself with credentials and the configuration below, then complete the [MMDSv2 step](#post-deploy-require-mmdsv2-on-the-agent-runtime).
+Nothing in this repository deploys. To deploy, run `npm run build && npm run build:web && npx cdk deploy Sous` yourself with credentials and the configuration below.
 
 ## Configuration
 
@@ -20,6 +20,7 @@ Set context in `cdk.json` or per command with `-c key=value`.
 | `crossAccountModelRegion` | Optional. Bedrock Region in the model account (sets `BEDROCK_REGION`). Default: the stack Region. |
 | `crossAccountModelExternalId` | Optional. ExternalId the role's trust policy requires (sets `MODEL_ROLE_EXTERNAL_ID`). |
 | `memoryPreferenceStrategyId` | Sets `MEMORY_PREFERENCE_STRATEGY_ID` on the runtime. CloudFormation does not return strategy ids, so read it after the first deploy (`aws bedrock-agentcore-control get-memory --memory-id <MemoryId output>`) and redeploy with it. It is optional. |
+| `betaApprovalEmail` | Optional. Enables the beta approval gate (see [Beta approval](#beta-approval)). The release workflow reads it from the GitHub variable `BETA_APPROVAL_EMAIL`. Unset or empty = sign-up stays open. |
 | `corsAllowOrigins` | Comma-separated allowed origins for the HTTP API. Default: the Client_App CloudFront origin only (`WebUrl` output). Setting it **replaces** the default, so include the CloudFront origin when adding others (see [Local development](#local-development)). |
 
 ## Suggestion_Agent image and runtime
@@ -27,31 +28,6 @@ Set context in `cdk.json` or per command with `-c key=value`.
 In `asset` mode the stack builds `agent/Dockerfile` as a `DockerImageAsset` for `linux/arm64` (AgentCore Runtime runs ARM64 containers only), with the repository root as the build context. The context is an allowlist: `package.json`, `package-lock.json`, `tsconfig.json`, `src/`, `agent/src/` and `agent/Dockerfile`, without tests. Changes elsewhere (`web/`, `node_modules/`, `cdk.out/`, the voice image) do not change the image hash. CDK pushes the image to its bootstrap ECR repository on deploy.
 
 The runtime (`sous_suggestion_agent`, public network mode, HTTP protocol) gets `MEMORY_ID`, `MEMORY_PREFERENCE_STRATEGY_ID` (when set), `MODEL_ID` and `BEDROCK_REGION`, plus `MODEL_ROLE_ARN` and `MODEL_ROLE_EXTERNAL_ID` when a cross-account model is configured. Its execution role allows image pull, `bedrock:InvokeModel` and `InvokeModelWithResponseStream` on Anthropic Claude and Amazon Nova foundation models and inference profiles (or `sts:AssumeRole` on the cross-account role instead), `RetrieveMemoryRecords` and `ListMemoryRecords` on the stack's memory (the agent never writes memory), and runtime log delivery.
-
-### Post-deploy: require MMDSv2 on the agent runtime
-
-Since June 30, 2026, AgentCore rejects invocations of runtimes whose `metadataConfiguration.requireMMDSV2` is not `true` ([Troubleshoot AgentCore Runtime](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/runtime-troubleshooting.html)). `CfnRuntime` in aws-cdk-lib 2.275.0 and the `AWS::BedrockAgentCore::Runtime` CloudFormation schema do not expose this setting yet, so the stack cannot set it. After a deploy that creates or updates the runtime, set it with `UpdateAgentRuntime`. The CLI marks `--agent-runtime-artifact` and `--role-arn` as required ([update-agent-runtime](https://docs.aws.amazon.com/cli/latest/reference/bedrock-agentcore-control/update-agent-runtime.html)), so the commands below copy the current configuration from `get-agent-runtime` and add only the metadata setting:
-
-```sh
-RUNTIME_ARN=$(aws cloudformation describe-stacks --stack-name Sous \
-  --query "Stacks[0].Outputs[?OutputKey=='AgentRuntimeArnOutput'].OutputValue" --output text)
-RUNTIME_ID=${RUNTIME_ARN##*/}
-
-aws bedrock-agentcore-control get-agent-runtime --agent-runtime-id "$RUNTIME_ID" \
-  --query '{agentRuntimeArtifact: agentRuntimeArtifact, roleArn: roleArn, description: description,
-            networkConfiguration: networkConfiguration, protocolConfiguration: protocolConfiguration,
-            environmentVariables: environmentVariables}' > runtime-update.json
-
-aws bedrock-agentcore-control update-agent-runtime --agent-runtime-id "$RUNTIME_ID" \
-  --cli-input-json file://runtime-update.json \
-  --metadata-configuration requireMMDSV2=true
-
-# Check: prints true
-aws bedrock-agentcore-control get-agent-runtime --agent-runtime-id "$RUNTIME_ID" \
-  --query metadataConfiguration.requireMMDSV2
-```
-
-Existing sessions are not affected; new invocations use the setting. Run the check after every `cdk deploy` that changes the runtime, and repeat the update if it prints anything other than `true`. In `parameter` mode the same applies to the runtime you pass in. Remove this step once `CfnRuntime` supports the setting, and set it in `sousStack.ts` instead.
 
 ## Client_App hosting
 
@@ -107,6 +83,17 @@ The Voice Lambda is a `DockerImageFunction` (arm64, 1024 MB, 20 s) built from `i
 **Licence.** The static-ffmpeg build scripts are MIT. They configure FFmpeg with `--enable-gpl --enable-version3`, so the binary is GPLv3. Sous runs the unmodified binary as a separate process inside its own private Lambda image, and does not link it into its code. The GPL source obligations apply only if the image is distributed to third parties. In that case, provide the FFmpeg 9.0.2 sources and the static-ffmpeg Dockerfile at the pinned tag. No widely published static LGPL arm64 build exists. Moving to LGPL would mean building FFmpeg from source without GPL libraries.
 
 Only a small part of ffmpeg is used, always with the fixed arguments from `ffmpegArgs` in `src/voice/audioConverter.ts`: the `matroska` (WebM) and `mov` (MP4) demuxers, the native Opus and AAC decoders, and `pcm_s16le` output to `pipe:1`, restricted by `-protocol_whitelist file,pipe`. To update ffmpeg, change the tag and the digest together (`docker buildx imagetools inspect mwader/static-ffmpeg:<tag>`).
+
+## Beta approval
+
+With `betaApprovalEmail` set, a Cognito Post-confirmation trigger (`src/services/auth/approvalLambda.ts`) disables every user as soon as they confirm their email after sign-up, and publishes to the SNS topic `sous-user-approvals`, which emails the configured address. The trigger ignores the password-reset confirmation, so approved users are never disabled again.
+
+- **Set up**: add the GitHub repository (or `production` environment) variable `BETA_APPROVAL_EMAIL`, then deploy. SNS sends a subscription confirmation email once; click the link, or no notifications arrive (users are still disabled).
+- **Approve**: `aws cognito-idp admin-enable-user --user-pool-id <UserPoolId output> --username <email>` (the notification email contains the command).
+- **Reject**: `aws cognito-idp admin-delete-user` with the same arguments.
+- **End the beta**: clear the variable and redeploy, then enable any users still waiting. Disabled users stay disabled.
+- A disabled user gets the same generic sign-in error as a wrong password, so the login does not reveal which emails are registered. The sign-in screen tells new users that approval is needed.
+- If disabling fails, the confirmation fails and the user can retry, so nobody gets in unapproved.
 
 ## Invitation expiry sweep
 

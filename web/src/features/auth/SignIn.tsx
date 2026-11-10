@@ -75,7 +75,7 @@ export function SignIn() {
       }
     >
       <form noValidate onSubmit={onSubmit} className="flex flex-col gap-5">
-        {state.confirmedEmail && !error && <Notice tone="success">Your account is confirmed. Sign in to continue.</Notice>}
+        {state.confirmedEmail && !error && <Notice tone="success">Your email is confirmed. During the beta, new accounts also need approval before you can sign in.</Notice>}
         {state.reason === 'expired' && !state.confirmedEmail && !error && (
           <Notice>Your session has ended. Please sign in again.</Notice>
         )}

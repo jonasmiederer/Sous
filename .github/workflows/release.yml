@@ -110,9 +110,13 @@ jobs:
         env:
           CUSTOM_DOMAIN_NAME: ${{ vars.CUSTOM_DOMAIN_NAME }}
           CUSTOM_DOMAIN_CERTIFICATE_ARN: ${{ vars.CUSTOM_DOMAIN_CERTIFICATE_ARN }}
+          # Beta approval gate: new users wait for approval and this address is notified.
+          # Unset or empty = sign-up stays open.
+          BETA_APPROVAL_EMAIL: ${{ vars.BETA_APPROVAL_EMAIL }}
         run: >
           npx cdk deploy Sous
           --require-approval never
           --tags Version=${{ needs.version.outputs.version }}
           -c customDomainName="$CUSTOM_DOMAIN_NAME"
           -c customDomainCertificateArn="$CUSTOM_DOMAIN_CERTIFICATE_ARN"
+          -c betaApprovalEmail="$BETA_APPROVAL_EMAIL"
