@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 import { CircleCheck, Info } from 'lucide-react';
-import { MAIN_CONTENT_ID, ThemeToggle, cx } from '../../ui';
+import { MAIN_CONTENT_ID, SiteFooter, ThemeToggle, cx } from '../../ui';
 
 export interface AuthLayoutProps {
   title: string;
@@ -31,6 +31,7 @@ export function AuthLayout({ title, description, children, footer }: AuthLayoutP
           {footer && <div className="text-center text-sm text-text-muted">{footer}</div>}
         </div>
       </main>
+      <SiteFooter className="px-4 pb-6" />
     </div>
   );
 }

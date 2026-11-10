@@ -1,5 +1,6 @@
 import type { ComponentType, ReactNode } from 'react';
 import { OfflineBanner } from './OfflineBanner';
+import { SiteFooter } from './SiteFooter';
 import { TabBar, type NavItem, type NavLinkProps } from './TabBar';
 
 export const MAIN_CONTENT_ID = 'main-content';
@@ -62,10 +63,12 @@ export function AppShell({ navItems, activeNavId, linkComponent, actions, subtit
       <main
         id={MAIN_CONTENT_ID}
         tabIndex={-1}
-        className="mx-auto w-full max-w-screen-sm px-4 pt-6 pb-[calc(6rem+env(safe-area-inset-bottom))] outline-none sm:px-6 lg:max-w-3xl lg:pt-10 lg:pb-16"
+        className="mx-auto w-full max-w-screen-sm px-4 pt-6 pb-8 outline-none sm:px-6 lg:max-w-3xl lg:pt-10"
       >
         {children}
       </main>
+
+      <SiteFooter className="px-4 pb-[calc(6rem+env(safe-area-inset-bottom))] lg:pb-10" />
 
       <TabBar items={navItems} activeId={activeNavId} linkComponent={linkComponent} railHeader={<BrandMark size="lg" />} />
     </div>

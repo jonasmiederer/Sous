@@ -10,6 +10,7 @@ export { IconButton, type IconButtonProps } from './IconButton';
 export { OfflineBanner, OFFLINE_MESSAGE, useOnlineStatus } from './OfflineBanner';
 export { Sheet, type SheetProps } from './Sheet';
 export { Skeleton, SkeletonList, type SkeletonProps, type SkeletonListProps } from './Skeleton';
+export { SiteFooter, GITHUB_URL, WEBSITE_URL } from './SiteFooter';
 export { Spinner, type SpinnerProps } from './Spinner';
 export { TabBar, DefaultNavLink, type NavItem, type NavLinkProps, type TabBarProps } from './TabBar';
 export { TextArea, isOverLimit, type TextAreaProps } from './TextArea';
