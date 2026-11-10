@@ -6,7 +6,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useApi } from '../../app/ServicesProvider';
 import { isApiError } from '../../api/errors';
 import { useActiveHousehold } from '../../household/ActiveHouseholdProvider';
-import type { GetGroceryListResponse } from '../../api/types';
+import type { GetGroceryListResponse, GroceryEntry } from '../../api/types';
 
 export function groceryListKey(householdId: string | null, planId: string) {
   return ['hh', householdId ?? 'none', 'grocery', planId] as const;
@@ -32,6 +32,19 @@ export function useGroceryList(planId: string) {
       }
     },
     enabled: activeHouseholdId !== null && planId !== '',
+  });
+}
+
+/** Saves a manual edit (add, remove, change entries) and puts the stored list in the cache. */
+export function useUpdateGroceryList(planId: string) {
+  const api = useApi();
+  const queryClient = useQueryClient();
+  const { activeHouseholdId } = useActiveHousehold();
+  return useMutation({
+    mutationFn: (entries: GroceryEntry[]) => api.updateGroceryList(planId, { entries }),
+    onSuccess: (result) => {
+      queryClient.setQueryData<GetGroceryListResponse>(groceryListKey(activeHouseholdId, planId), result);
+    },
   });
 }
 

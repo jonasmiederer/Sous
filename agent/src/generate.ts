@@ -40,9 +40,9 @@ import {
   type StructuredRequest,
   type StructuredResult,
 } from './model/modelClient.js';
-import { buildSystemPrompt, buildUserMessage, type PlanChunk } from './prompts.js';
+import { buildPlanOutlineSystemPrompt, buildSystemPrompt, buildUserMessage, type PlanChunk } from './prompts.js';
 import type { AgentRequest, SoftPreferenceEntry } from './requestParser.js';
-import { responseSchema } from './schemas.js';
+import { planOutlineSchema, responseSchema } from './schemas.js';
 import type { SoftPreferenceSource } from './softPreferences.js';
 
 /** Minimum remaining budget for a repair call (design.md). */
@@ -54,6 +54,7 @@ export const MIN_REPAIR_BUDGET_MS: Readonly<{ single: number; planChunk: number 
 export const MAX_OUTPUT_TOKENS = {
   perSuggestion: 900,
   perPlanDay: 800,
+  perOutlineDay: 40,
   refine: 4_000,
   overhead: 300,
 } as const;
@@ -246,6 +247,40 @@ async function generateRefine(
   });
 }
 
+/** Dish names must differ ignoring case and surrounding whitespace. */
+function distinctNames(names: readonly string[]): boolean {
+  return new Set(names.map((n) => n.trim().toLowerCase())).size === names.length;
+}
+
+/**
+ * Chunks are generated concurrently and cannot see each other, so without a
+ * shared outline each chunk tends to start with the same dishes. One quick
+ * call picks a distinct dish per day for the whole range up front; chunks are
+ * then told which dish to write for each of their days. Best effort: a failed
+ * or unusable outline returns undefined and chunks run without assignments.
+ */
+async function planOutline(
+  request: Extract<AgentRequest, { mode: 'plan' }>,
+  soft: SoftPreferenceEntry[],
+  ctx: ChainContext,
+): Promise<string[] | undefined> {
+  if (timedOut(ctx) || ctx.signal.aborted) return undefined;
+  const result = await callModel(ctx, {
+    system: buildPlanOutlineSystemPrompt(),
+    tool: { name: SUBMIT_RESPONSE_TOOL_NAME, description: TOOL_DESCRIPTION, inputSchema: planOutlineSchema(request.rangeDays) },
+    messages: [{ role: 'user', content: [{ type: 'text', text: buildUserMessage(request, soft) }] }],
+    maxTokens: MAX_OUTPUT_TOKENS.overhead + MAX_OUTPUT_TOKENS.perOutlineDay * request.rangeDays,
+    temperature: MODEL_TEMPERATURE,
+    signal: ctx.signal,
+  });
+  if (!result.ok || typeof result.document !== 'object' || result.document === null) return undefined;
+  const names = (result.document as { names?: unknown }).names;
+  if (!Array.isArray(names) || names.length !== request.rangeDays) return undefined;
+  if (!names.every((n): n is string => typeof n === 'string' && n.trim().length > 0)) return undefined;
+  const trimmed = names.map((n) => n.trim());
+  return distinctNames(trimmed) ? trimmed : undefined;
+}
+
 async function generatePlan(
   request: Extract<AgentRequest, { mode: 'plan' }>,
   soft: SoftPreferenceEntry[],
@@ -254,7 +289,14 @@ async function generatePlan(
   cancelAll: () => void,
 ): Promise<ChainResult<PlanAgentResponse>> {
   const system = buildSystemPrompt('plan');
-  const chunks = planChunks(request.rangeDays, config.planChunkDays);
+  let chunks = planChunks(request.rangeDays, config.planChunkDays);
+  if (chunks.length > 1) {
+    const outline = await planOutline(request, soft, ctx);
+    if (outline !== undefined) {
+      chunks = chunks.map((c) => ({ ...c, assignedNames: outline.slice(c.firstDay - 1, c.firstDay - 1 + c.dayCount) }));
+    }
+  }
+  if (timedOut(ctx)) return TIMEOUT;
   let firstFailure: ChainResult<never> | undefined;
 
   const results = await Promise.all(

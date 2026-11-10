@@ -91,6 +91,12 @@ export function checkPlanChunk(
   }
   const excluded = exclusionMessage(response.meals, exclusionRules(request), (i) => `response.meals[${i}]`);
   if (excluded !== undefined) return { ok: false, message: excluded };
+  const seen = new Set<string>();
+  for (const [i, meal] of response.meals.entries()) {
+    const name = normalizeMealName(meal.name);
+    if (seen.has(name)) return { ok: false, message: `response.meals[${i}] ("${meal.name}") repeats a dish; every day needs a different Meal` };
+    seen.add(name);
+  }
   return { ok: true, value: response };
 }
 

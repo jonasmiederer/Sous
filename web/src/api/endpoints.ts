@@ -43,6 +43,7 @@ import type {
   SubmitVoiceRequest,
   SuggestRequest,
   SuggestResponse,
+  UpdateGroceryListRequest,
 } from './types';
 
 /** Static description of one API route. */
@@ -83,6 +84,7 @@ export const ROUTES = {
 
   generateGroceryList: { method: 'POST', route: '/plans/{id}/grocery-list', access: 'household', timeoutMs: S10 },
   getGroceryList: { method: 'GET', route: '/plans/{id}/grocery-list', access: 'household', timeoutMs: S10 },
+  updateGroceryList: { method: 'PUT', route: '/plans/{id}/grocery-list', access: 'household', timeoutMs: S10 },
 
   getPreferences: { method: 'GET', route: '/preferences', access: 'household', timeoutMs: S10 },
   sendFeedback: { method: 'POST', route: '/preferences/feedback', access: 'household', timeoutMs: S10 },
@@ -171,6 +173,8 @@ export function createEndpoints(client: ApiClient) {
       call<GenerateGroceryListResponse>('generateGroceryList', { id: planId }, undefined, o),
     getGroceryList: (planId: string, o?: CallOptions) =>
       call<GetGroceryListResponse>('getGroceryList', { id: planId }, undefined, o),
+    updateGroceryList: (planId: string, body: UpdateGroceryListRequest, o?: CallOptions) =>
+      call<GetGroceryListResponse>('updateGroceryList', { id: planId }, body, o),
 
     // Preferences
     getPreferences: (o?: CallOptions) => call<GetPreferencesResponse>('getPreferences', {}, undefined, o),

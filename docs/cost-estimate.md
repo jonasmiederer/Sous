@@ -27,7 +27,7 @@ Per month: 30 ad hoc suggestion requests, 4 week plans, 40 chat refinement turns
 | Week plan (2 chunks of up to 4 days) | ~8,000 | ~6,000 | ~$0.004 |
 | Chat refinement turn | ~3,000 | ~1,000 | ~$0.001 |
 
-The input includes the system prompt, household preferences, fridge contents and context. Plans are generated in two model calls because of the 4-day chunking (`PLAN_CHUNK_DAYS`). One repair call (Property 36) is rare and would add about 5% to 10%. Token counts are my assumptions.
+The input includes the system prompt, household preferences, fridge contents and context. Plans are generated in two chunk calls because of the 4-day chunking (`PLAN_CHUNK_DAYS`), preceded by one small call that picks a distinct dish name per day (about 300 output tokens). One repair call (Property 36) is rare and would add about 5% to 10%. Token counts are my assumptions.
 
 ## Scenario 1: one household
 
