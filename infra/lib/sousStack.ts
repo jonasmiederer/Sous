@@ -45,6 +45,8 @@ import {
   aws_s3_deployment as s3deploy,
   aws_scheduler as scheduler,
   aws_scheduler_targets as schedulerTargets,
+  aws_sns as sns,
+  aws_sns_subscriptions as snsSubscriptions,
   aws_sqs as sqs,
 } from 'aws-cdk-lib';
 import type { Construct } from 'constructs';
@@ -107,6 +109,13 @@ export interface SousStackProps extends StackProps {
    * The domain is added to the default CORS origins.
    */
   customDomain?: { domainName: string; certificateArn: string };
+  /**
+   * Optional beta approval gate. When set, every new user is disabled after
+   * confirming their email and this address is notified (SNS email; the
+   * subscription must be confirmed once). The operator approves with
+   * `aws cognito-idp admin-enable-user`. When unset, sign-up stays open.
+   */
+  betaApprovalEmail?: string;
   /**
    * Directory of the built Client_App, absolute or relative to the repository
    * root. Defaults to `web/dist`. Must contain `index.html`.
@@ -395,6 +404,29 @@ export class SousStack extends Stack {
       timeout: Duration.seconds(10),
       environment: { COGNITO_CLIENT_ID: userPoolClient.userPoolClientId },
     });
+
+    // Beta approval gate: new users are disabled once they confirm their email
+    // and the operator is notified by email. Enabled only when
+    // betaApprovalEmail is set; otherwise sign-up stays open.
+    if (props.betaApprovalEmail) {
+      const approvalTopic = new sns.Topic(this, 'ApprovalTopic', { topicName: 'sous-user-approvals' });
+      approvalTopic.addSubscription(new snsSubscriptions.EmailSubscription(props.betaApprovalEmail));
+      const approval = fn('ApprovalFunction', 'src/services/auth/approvalLambda.ts', {
+        timeout: Duration.seconds(10),
+        environment: { APPROVAL_TOPIC_ARN: approvalTopic.topicArn },
+      });
+      approvalTopic.grantPublish(approval);
+      // A pool-scoped ARN would make the pool and the function depend on each
+      // other (the pool lists the function as a trigger), so this is scoped to
+      // user pools of this account and Region.
+      approval.addToRolePolicy(
+        new iam.PolicyStatement({
+          actions: ['cognito-idp:AdminDisableUser'],
+          resources: [`arn:${this.partition}:cognito-idp:${this.region}:${this.account}:userpool/*`],
+        }),
+      );
+      userPool.addTrigger(cognito.UserPoolOperation.POST_CONFIRMATION, approval);
+    }
     const suggestions = fn('SuggestionsFunction', 'src/services/suggestions/lambda.ts', {
       timeout: Duration.seconds(15),
       environment: agentEnv,

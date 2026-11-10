@@ -21,6 +21,8 @@
  *   memoryPreferenceStrategyId  optional; sets MEMORY_PREFERENCE_STRATEGY_ID
  *   corsAllowOrigins            optional comma-separated origin list (default: the Client_App
  *                               CloudFront origin; e.g. add http://localhost:5173 for development)
+ *   betaApprovalEmail           optional; enables the beta approval gate: new users are disabled
+ *                               after confirming their email and this address is notified
  *   customDomainName            optional; custom domain for the Client_App distribution (requires
  *                               customDomainCertificateArn; DNS is managed outside this stack)
  *   customDomainCertificateArn  us-east-1 ACM certificate ARN covering customDomainName
@@ -63,6 +65,7 @@ const modelId = context('agentModelId');
 const crossModel = crossAccountModel();
 const strategyId = context('memoryPreferenceStrategyId');
 const origins = context('corsAllowOrigins');
+const betaApprovalEmail = context('betaApprovalEmail');
 const customDomainName = context('customDomainName');
 const customDomainCertificateArn = context('customDomainCertificateArn');
 if (customDomainName && !customDomainCertificateArn) {
@@ -75,6 +78,7 @@ new SousStack(app, 'Sous', {
   ...(modelId ? { agentModelId: modelId } : {}),
   ...(crossModel ? { crossAccountModel: crossModel } : {}),
   ...(strategyId ? { memoryPreferenceStrategyId: strategyId } : {}),
+  ...(betaApprovalEmail ? { betaApprovalEmail } : {}),
   ...(customDomainName && customDomainCertificateArn
     ? { customDomain: { domainName: customDomainName, certificateArn: customDomainCertificateArn } }
     : {}),

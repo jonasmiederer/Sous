@@ -161,7 +161,7 @@ describe('sign-up', () => {
     await user.type(screen.getByLabelText('Confirmation code'), '123456');
     await user.click(screen.getByRole('button', { name: 'Confirm account' }));
     expect(await screen.findByRole('heading', { level: 1, name: 'Welcome back' })).toBeInTheDocument();
-    expect(screen.getByText(/Your account is confirmed/)).toBeInTheDocument();
+    expect(screen.getByText(/Your email is confirmed/)).toBeInTheDocument();
     expect(calls.map((c) => c.headers['x-amz-target'])).toEqual([
       'AWSCognitoIdentityProviderService.SignUp',
       'AWSCognitoIdentityProviderService.ConfirmSignUp',
