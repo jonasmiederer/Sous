@@ -8,7 +8,7 @@
  * Generation
  * - Validation happens before any read or agent call: range 1-31 (weekly = 7),
  *   Context_Input <= 500 chars, presets recognized and compatible.
- * - A stored Preference_Profile is required (3.3).
+ * - A stored Preference_Profile is optional; without one the plan is unconstrained.
  * - The whole plan is built in memory and persisted only when complete, as one
  *   all-or-nothing transaction creating the plan record and its Meal records
  *   (3.4, 3.5). Any failure stores nothing.
@@ -184,8 +184,9 @@ export class PlanService {
     else if (isIsoDate(request.startDate)) startDate = request.startDate;
     else return planError('INVALID_REQUEST', 'startDate must be a calendar date in YYYY-MM-DD form.');
 
+    // A Preference_Profile is optional: without one the agent gets a null
+    // profile and suggests a varied plan, like ad hoc suggestions do.
     const context = await this.loadContext();
-    if (!context.profile) return planError('PROFILE_REQUIRED', PLAN_ERROR_MESSAGES.profileRequired);
 
     const generated = await this.generateMeals(range.value, context, options.value, deadlineAt);
     if (!generated.ok) return generated;
