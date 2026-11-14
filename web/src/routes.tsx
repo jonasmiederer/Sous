@@ -71,6 +71,24 @@ function ShellLayout() {
 }
 
 /**
+ * Keeps the Suggest screen mounted (hidden) while the User visits other
+ * screens, so generated suggestions survive navigation. It remounts, and so
+ * resets, when the Active_Household changes or the User signs out.
+ */
+function HouseholdLayout() {
+  const { pathname } = useLocation();
+  const home = pathname === '/';
+  return (
+    <>
+      <div hidden={!home}>
+        <SuggestRoute />
+      </div>
+      {!home && <Outlet />}
+    </>
+  );
+}
+
+/**
  * The route tree. Nesting encodes access: `RedirectIfSignedIn` wraps the
  * public auth routes, `RequireSession` the rest, and `RequireHousehold` the
  * routes that also need an active household. Unknown paths redirect to `/`.
@@ -88,8 +106,14 @@ export function AppRoutes() {
         <Route element={<ShellLayout />}>
           <Route path="/invitations/:invitationId" element={<AcceptInvitation />} />
           <Route path="/households" element={<HouseholdPicker />} />
-          <Route element={<RequireHousehold />}>
-            <Route index element={<SuggestRoute />} />
+          <Route
+            element={
+              <RequireHousehold>
+                <HouseholdLayout />
+              </RequireHousehold>
+            }
+          >
+            <Route index element={null} />
             <Route path="/households/members" element={<Members />} />
             <Route path="/plans" element={<PlansList />} />
             <Route path="/plans/new" element={<NewPlan />} />
