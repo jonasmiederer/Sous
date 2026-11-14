@@ -60,6 +60,8 @@ export const MAX_OUTPUT_TOKENS = {
 } as const;
 
 export const MODEL_TEMPERATURE = 0.5;
+/** Ad hoc suggestions favour variety: the same household context otherwise yields the same dishes. */
+export const AD_HOC_TEMPERATURE = 0.9;
 
 export type GenerateErrorCode = 'GENERATION_FAILED' | 'GENERATION_TIMEOUT';
 
@@ -96,6 +98,8 @@ interface ChainSpec<T> {
   schema: JsonSchema;
   maxTokens: number;
   minRepairMs: number;
+  /** Defaults to MODEL_TEMPERATURE. */
+  temperature?: number;
   check: (document: unknown) => CheckResult<T>;
 }
 
@@ -162,7 +166,7 @@ async function runChain<T>(ctx: ChainContext, spec: ChainSpec<T>): Promise<Chain
     system: spec.system,
     tool: { name: SUBMIT_RESPONSE_TOOL_NAME, description: TOOL_DESCRIPTION, inputSchema: spec.schema },
     maxTokens: spec.maxTokens,
-    temperature: MODEL_TEMPERATURE,
+    temperature: spec.temperature ?? MODEL_TEMPERATURE,
     signal: ctx.signal,
   } as const;
 
@@ -227,6 +231,7 @@ async function generateAdHoc(
     schema: responseSchema('ad_hoc'),
     maxTokens: MAX_OUTPUT_TOKENS.overhead + MAX_OUTPUT_TOKENS.perSuggestion * count,
     minRepairMs: MIN_REPAIR_BUDGET_MS.single,
+    temperature: AD_HOC_TEMPERATURE,
     check: (doc) => checkAdHocResponse(doc as AdHocAgentResponse, request),
   });
 }

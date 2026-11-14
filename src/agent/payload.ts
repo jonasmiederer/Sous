@@ -43,6 +43,8 @@ export interface AdHocPayload extends BasePayload {
   rejectedSuggestionNames: string[];
   /** Every dish already shown in this session (rejected or not); used only to steer variety. */
   shownSuggestionNames?: string[];
+  /** Dishes suggested to the household in earlier sessions (last 24 h, newest first); used only to steer variety. */
+  recentSuggestionNames?: string[];
 }
 
 export interface PlanPayload extends BasePayload {
@@ -101,6 +103,7 @@ export interface AdHocPayloadInput extends BaseInput {
   contextInput?: string | null;
   rejectedSuggestionNames?: readonly string[] | null;
   shownSuggestionNames?: readonly string[] | null;
+  recentSuggestionNames?: readonly string[] | null;
 }
 
 export interface PlanPayloadInput extends BaseInput {
@@ -148,6 +151,9 @@ export function buildAdHocPayload(input: AdHocPayloadInput): AdHocPayload {
   if (input.contextInput != null) payload.contextInput = input.contextInput;
   if (input.shownSuggestionNames != null && input.shownSuggestionNames.length > 0) {
     payload.shownSuggestionNames = [...input.shownSuggestionNames];
+  }
+  if (input.recentSuggestionNames != null && input.recentSuggestionNames.length > 0) {
+    payload.recentSuggestionNames = [...input.recentSuggestionNames];
   }
   return payload;
 }
