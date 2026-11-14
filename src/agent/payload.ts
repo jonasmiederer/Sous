@@ -41,6 +41,8 @@ export interface AdHocPayload extends BasePayload {
   mode: 'ad_hoc';
   contextInput?: string;
   rejectedSuggestionNames: string[];
+  /** Every dish already shown in this session (rejected or not); used only to steer variety. */
+  shownSuggestionNames?: string[];
 }
 
 export interface PlanPayload extends BasePayload {
@@ -98,6 +100,7 @@ interface BaseInput {
 export interface AdHocPayloadInput extends BaseInput {
   contextInput?: string | null;
   rejectedSuggestionNames?: readonly string[] | null;
+  shownSuggestionNames?: readonly string[] | null;
 }
 
 export interface PlanPayloadInput extends BaseInput {
@@ -143,6 +146,9 @@ export function buildAdHocPayload(input: AdHocPayloadInput): AdHocPayload {
     rejectedSuggestionNames: [...(input.rejectedSuggestionNames ?? [])],
   };
   if (input.contextInput != null) payload.contextInput = input.contextInput;
+  if (input.shownSuggestionNames != null && input.shownSuggestionNames.length > 0) {
+    payload.shownSuggestionNames = [...input.shownSuggestionNames];
+  }
   return payload;
 }
 

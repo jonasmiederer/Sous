@@ -211,6 +211,9 @@ function parse(value: unknown): AgentRequest {
         ...soft,
       };
       if (o.contextInput !== undefined) request.contextInput = contextInput(o.contextInput, 'contextInput');
+      if (o.shownSuggestionNames !== undefined) {
+        request.shownSuggestionNames = stringArray(o.shownSuggestionNames, 'shownSuggestionNames');
+      }
       return request;
     }
     case 'plan': {
