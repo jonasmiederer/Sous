@@ -69,8 +69,22 @@ export function filterAdHocSuggestions(suggestions: readonly AgentMeal[], reques
   return kept;
 }
 
+/**
+ * Soft variety filter: drops Meals whose name exactly repeats a dish already
+ * shown in this session or suggested recently, but only while at least one
+ * fresh Meal remains. Never empties the list on its own.
+ */
+export function preferFreshSuggestions(suggestions: readonly AgentMeal[], request: AdHocRequest): AgentMeal[] {
+  const seen = new Set(
+    [...(request.shownSuggestionNames ?? []), ...(request.recentSuggestionNames ?? [])].map(normalizeMealName),
+  );
+  if (seen.size === 0) return [...suggestions];
+  const fresh = suggestions.filter((m) => !seen.has(normalizeMealName(m.name)));
+  return fresh.length > 0 ? fresh : [...suggestions];
+}
+
 export function checkAdHocResponse(response: AdHocAgentResponse, request: AdHocRequest): CheckResult<AdHocAgentResponse> {
-  const suggestions = filterAdHocSuggestions(response.suggestions, request);
+  const suggestions = preferFreshSuggestions(filterAdHocSuggestions(response.suggestions, request), request);
   if (suggestions.length === 0) {
     return {
       ok: false,

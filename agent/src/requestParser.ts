@@ -214,6 +214,9 @@ function parse(value: unknown): AgentRequest {
       if (o.shownSuggestionNames !== undefined) {
         request.shownSuggestionNames = stringArray(o.shownSuggestionNames, 'shownSuggestionNames');
       }
+      if (o.recentSuggestionNames !== undefined) {
+        request.recentSuggestionNames = stringArray(o.recentSuggestionNames, 'recentSuggestionNames');
+      }
       return request;
     }
     case 'plan': {

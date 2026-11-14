@@ -55,6 +55,8 @@ function modeRules(mode: AgentMode, suggestionCount: number): string[] {
         'Never suggest a Meal whose name matches any entry in `rejectedNames`.',
         'Each Meal must differ in cuisine AND main ingredient from every entry in `rejectedNames` and `shownNames` (when present), and from each other. A variation on the same dish (for example a different sauce or side) does not count as different.',
         'If `shownNames` is present, the household has already seen those dishes in this session. Avoid repeating their cuisines and main ingredients; if several share one, steer clear of that category entirely.',
+        'If `recentNames` is present, those dishes were already suggested to the household in the last day. Do not suggest any of them again, nor a near-identical dish (same base dish with a different side or sauce). Prefer cuisines and main ingredients that do not appear there.',
+        '`likes` may contain whole dish names the household enjoyed. Treat them as a taste signal only: never return a liked dish itself or a close variant of it.',
         '`likes`, `preferIngredients` and `softPreferences` are hints, not a template. At least one Meal should be something the household would not usually pick, while still respecting `avoid` and the Presets.',
         'Respond with `mode` "ad_hoc" and the Meals in `suggestions`.',
       ];
@@ -163,6 +165,9 @@ export function buildRequestData(
       data.rejectedNames = [...request.rejectedSuggestionNames];
       if (request.shownSuggestionNames !== undefined && request.shownSuggestionNames.length > 0) {
         data.shownNames = [...request.shownSuggestionNames];
+      }
+      if (request.recentSuggestionNames !== undefined && request.recentSuggestionNames.length > 0) {
+        data.recentNames = [...request.recentSuggestionNames];
       }
       if (request.contextInput !== undefined) data.contextInput = request.contextInput;
       break;

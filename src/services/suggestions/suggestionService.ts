@@ -40,7 +40,7 @@ import type { MemoryClient, HouseholdPreferenceRead } from '../../agent/memoryCl
 import { buildAdHocPayload, type AdHocPayload } from '../../agent/payload.js';
 import type { AgentMeal } from '../../agent/responses.js';
 import { AD_HOC_DEADLINE_MS, type SuggestionAgentClient } from '../../agent/runtimeClient.js';
-import { sortKeys } from '../../data/keys.js';
+import { KeyPrefix, sortKeys } from '../../data/keys.js';
 import type { Attributes, HouseholdRepository, HouseholdTransactOp, StoredRecord } from '../../data/repository.js';
 import type { ActiveHouseholdScope } from '../../domain/household.js';
 import type {
@@ -191,9 +191,9 @@ export class SuggestionService {
     const storage = Promise.all([
       repo.get<PreferenceProfile & Attributes>(sortKeys.preferenceProfile()),
       repo.get<FridgeInventory & Attributes>(sortKeys.fridge()),
-      request.sessionId !== undefined
-        ? repo.query<StoredSuggestion>(sortKeys.suggestionSession(request.sessionId))
-        : Promise.resolve([] as StoredRecord<StoredSuggestion>[]),
+      // All of the household's stored suggestions (TTL keeps this to about a day):
+      // this session's for rejections, earlier sessions' to steer variety.
+      repo.query<StoredSuggestion>(KeyPrefix.suggestion),
     ]);
 
     let loaded: Awaited<typeof storage> | typeof TIMED_OUT;
@@ -204,7 +204,13 @@ export class SuggestionService {
       return noSuggestion('storage_unavailable', sessionId);
     }
     if (loaded === TIMED_OUT) return timeout(this.deadlineMs, sessionId);
-    const [profileRecord, fridgeRecord, sessionRecords] = loaded;
+    const [profileRecord, fridgeRecord, householdSuggestions] = loaded;
+    const sessionPrefix = request.sessionId !== undefined ? sortKeys.suggestionSession(request.sessionId) : undefined;
+    const sessionRecords = sessionPrefix ? householdSuggestions.filter((r) => r.sk.startsWith(sessionPrefix)) : [];
+    const recentNames = recentSuggestionNames(
+      householdSuggestions.filter((r) => !sessionPrefix || !r.sk.startsWith(sessionPrefix)),
+      startedAt,
+    );
     const softMemory = await boundedMemory;
 
     // --- Resolve rejected names from the session ---------------------------
@@ -247,6 +253,7 @@ export class SuggestionService {
         contextInput: request.contextInput ?? null,
         rejectedSuggestionNames: rejectedNames,
         shownSuggestionNames: shownNames,
+        recentSuggestionNames: recentNames,
       }),
       householdPreferenceMemory: softMemory.entries.map((e) =>
         e.polarity !== undefined ? { statement: e.statement, polarity: e.polarity } : { statement: e.statement },
@@ -341,6 +348,31 @@ export class SuggestionService {
     if (!preferenceApplied) value.notice = NO_PROFILE_NOTICE;
     return { ok: true, value };
   }
+}
+
+/** At most this many recent dish names from earlier sessions are sent to the agent. */
+export const MAX_RECENT_SUGGESTION_NAMES = 12;
+
+/**
+ * Distinct names of suggestions created within the session TTL, newest first.
+ * DynamoDB TTL deletion lags, so expired items are filtered by `createdAt` too.
+ */
+function recentSuggestionNames(records: readonly StoredRecord<StoredSuggestion>[], nowMs: number): string[] {
+  const cutoff = nowMs - SUGGESTION_SESSION_TTL_SECONDS * 1000;
+  const dated = records
+    .map((r) => ({ name: r.attributes.name, at: Date.parse(String(r.attributes.createdAt ?? '')) }))
+    .filter((r) => typeof r.name === 'string' && Number.isFinite(r.at) && r.at >= cutoff)
+    .sort((a, b) => b.at - a.at);
+  const names: string[] = [];
+  const seen = new Set<string>();
+  for (const { name } of dated) {
+    const key = name.trim().toLowerCase();
+    if (seen.has(key)) continue;
+    seen.add(key);
+    names.push(name);
+    if (names.length === MAX_RECENT_SUGGESTION_NAMES) break;
+  }
+  return names;
 }
 
 function toView(

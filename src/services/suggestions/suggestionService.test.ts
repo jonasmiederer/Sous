@@ -175,6 +175,36 @@ describe('SuggestionService generation', () => {
   });
 });
 
+describe('SuggestionService variety across sessions', () => {
+  it('sends dishes from earlier sessions as recentSuggestionNames, newest first, without this session\'s', async () => {
+    let names = ['Tuna Salad', 'Chicken Souvlaki'];
+    const { service, agent, repo } = setup({ ad_hoc: () => ({ mode: 'ad_hoc', suggestions: names.map((n) => meal(n)) }) });
+    // An expired item that DynamoDB TTL has not deleted yet is ignored.
+    await repo.upsert(sortKeys.suggestion('old', 'x1'), {
+      suggestionId: 'x1',
+      sessionId: 'old',
+      name: 'Stale Stew',
+      createdAt: new Date(NOW - 25 * 60 * 60 * 1000).toISOString(),
+    });
+    const first = await service.suggest(scope, {});
+    if (!first.ok) throw new Error(first.error.code);
+    expect((agent.lastPayload as AdHocPayloadWithMemory).recentSuggestionNames).toBeUndefined();
+
+    names = ['Ramen'];
+    const second = await service.suggest(scope, {});
+    if (!second.ok) throw new Error(second.error.code);
+    expect(agent.lastPayload).toMatchObject({ recentSuggestionNames: ['Tuna Salad', 'Chicken Souvlaki'] });
+
+    // Within the first session, its own dishes are "shown", not "recent".
+    names = ['Pho'];
+    await service.suggest(scope, { sessionId: first.value.sessionId });
+    expect(agent.lastPayload).toMatchObject({
+      shownSuggestionNames: ['Tuna Salad', 'Chicken Souvlaki'],
+      recentSuggestionNames: ['Ramen'],
+    });
+  });
+});
+
 describe('SuggestionService rejected suggestions within a session', () => {
   it('sends rejected names to the agent, filters repeats, and accumulates rejections', async () => {
     let names = ['Tacos'];

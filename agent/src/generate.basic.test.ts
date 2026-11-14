@@ -5,7 +5,7 @@ import { parseAgentResponseValue } from '../../src/agent/responses.js';
 import type { PreferenceProfile } from '../../src/domain/types.js';
 import { FakeModelClient, failedResult, okResult } from '../test/fakeModelClient.js';
 import type { AgentConfig } from './config.js';
-import { checkPlanChunk, checkRefineResponse, filterAdHocSuggestions } from './contractChecks.js';
+import { checkAdHocResponse, checkPlanChunk, checkRefineResponse, filterAdHocSuggestions } from './contractChecks.js';
 import { generate, planChunks } from './generate.js';
 import { decodeRequestData } from './prompts.js';
 import type { AdHocRequest, AgentRequest } from './requestParser.js';
@@ -69,6 +69,27 @@ describe('filterAdHocSuggestions', () => {
       adHoc(),
     );
     expect(kept.map((m) => m.name)).toEqual(['Soup', 'A', 'B']);
+  });
+});
+
+describe('checkAdHocResponse variety', () => {
+  it('drops exact repeats of recent or shown dishes while a fresh one remains, but never empties the list', () => {
+    const request = adHoc({ recentSuggestionNames: ['Tuna Salad'], shownSuggestionNames: ['Pho'] });
+    const mixed = checkAdHocResponse({ mode: 'ad_hoc', suggestions: [meal(' tuna salad'), meal('Ramen'), meal('pho')] }, request);
+    expect(mixed.ok && mixed.value.suggestions.map((m) => m.name)).toEqual(['Ramen']);
+    const allRepeats = checkAdHocResponse({ mode: 'ad_hoc', suggestions: [meal('Tuna Salad')] }, request);
+    expect(allRepeats.ok && allRepeats.value.suggestions.map((m) => m.name)).toEqual(['Tuna Salad']);
+  });
+
+  it('sends recentNames to the model and uses the higher ad hoc temperature', async () => {
+    const model = new FakeModelClient([okResult({ mode: 'ad_hoc', suggestions: [meal('Ramen')] })]);
+    await generate(adHoc({ recentSuggestionNames: ['Tuna Salad'], householdPreferenceMemory: [] }), {
+      model,
+      softPreferences: new FakeSoftPreferences(),
+      config,
+    });
+    expect(userData(model.requests[0]!).recentNames).toEqual(['Tuna Salad']);
+    expect(model.requests[0]!.temperature).toBe(0.9);
   });
 });
 
