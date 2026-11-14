@@ -260,6 +260,50 @@ export interface GetGroceryListResponse {
   sourcePlanVersion?: number;
 }
 
+/** A standalone, named grocery list that is not tied to a plan. */
+export interface ShoppingList {
+  listId: string;
+  name: string;
+  entries: Ingredient[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ShoppingListSummary {
+  listId: string;
+  name: string;
+  itemCount: number;
+  updatedAt: string;
+}
+
+/** GET /shopping-lists */
+export interface ListShoppingListsResponse {
+  shoppingLists: ShoppingListSummary[];
+}
+
+/** POST /shopping-lists: an empty list when `entries` is omitted. */
+export interface CreateShoppingListRequest {
+  name?: string;
+  entries?: Ingredient[];
+}
+
+/** PUT /shopping-lists/{id}: rename and/or replace all entries. */
+export interface UpdateShoppingListRequest {
+  name?: string;
+  entries?: Ingredient[];
+}
+
+/** POST /shopping-lists/{id}/items: ingredients are added to matching entries. */
+export interface AddShoppingListItemsRequest {
+  items: Ingredient[];
+}
+
+/** Response of create, get, update and add-items. */
+export interface ShoppingListResponse {
+  shoppingList: ShoppingList;
+  version: number;
+}
+
 // ---------------------------------------------------------------------------
 // Preferences
 // ---------------------------------------------------------------------------

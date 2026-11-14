@@ -2,7 +2,8 @@
  * Manual editing of a Grocery_List: change name, amount and unit, remove
  * entries, and add new ones (quick add like "6 eggs" or an empty row).
  *
- * Save replaces the whole list with `PUT /plans/{id}/grocery-list`. Rows left
+ * Save replaces the whole list with `PUT /plans/{id}/grocery-list` (or
+ * `PUT /shopping-lists/{id}` for a standalone list). Rows left
  * completely blank are ignored; a filled row without a name or with an amount
  * of 0 or less blocks the save and shows what to fix. Removing every row is
  * allowed and saves an empty list.
@@ -28,16 +29,22 @@ import {
   type FridgeRow,
 } from '../fridge/fridgeRows';
 import { useUpdateGroceryList } from './groceryQueries';
+import { useUpdateShoppingList } from './shoppingListQueries';
 
 export interface GroceryEditorProps {
-  planId: string;
+  /** Edits the grocery list of this plan (`PUT /plans/{id}/grocery-list`). */
+  planId?: string;
+  /** Edits this standalone list (`PUT /shopping-lists/{id}`) instead of a plan's list. */
+  shoppingListId?: string;
   entries: readonly GroceryEntry[];
   /** Called after a successful save or when the user cancels. */
   onDone: () => void;
 }
 
-export function GroceryEditor({ planId, entries, onDone }: GroceryEditorProps) {
-  const save = useUpdateGroceryList(planId);
+export function GroceryEditor({ planId = '', shoppingListId, entries, onDone }: GroceryEditorProps) {
+  const planUpdate = useUpdateGroceryList(planId);
+  const listUpdate = useUpdateShoppingList(shoppingListId ?? '');
+  const save = shoppingListId ? listUpdate : planUpdate;
   const [rows, setRows] = useState<FridgeRow[]>(() => rowsFromItems(entries));
   const [quickAdd, setQuickAdd] = useState('');
   const [attempted, setAttempted] = useState(false);
@@ -60,7 +67,9 @@ export function GroceryEditor({ planId, entries, onDone }: GroceryEditorProps) {
     event.preventDefault();
     setAttempted(true);
     if (hasProblem || save.isPending) return;
-    save.mutate(planSave(rows).items, { onSuccess: onDone });
+    const items = planSave(rows).items;
+    if (shoppingListId) listUpdate.mutate({ entries: items }, { onSuccess: onDone });
+    else planUpdate.mutate(items, { onSuccess: onDone });
   }
 
   return (

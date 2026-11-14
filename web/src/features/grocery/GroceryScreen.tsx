@@ -7,17 +7,19 @@
  * how many are checked. Check state lives on the device (useGroceryChecks)
  * and resets whenever the list is regenerated.
  */
-import { useState } from 'react';
-import { Link, useParams } from 'react-router';
-import { Check, ChevronLeft, MessageSquare, Pencil, RefreshCw, RotateCcw, ShoppingBasket } from 'lucide-react';
+import { useState, type ReactNode } from 'react';
+import { Link, useNavigate, useParams } from 'react-router';
+import { Check, ChevronLeft, MessageSquare, Pencil, RefreshCw, RotateCcw, ShoppingBasket, Trash2 } from 'lucide-react';
 import { AsyncView, Button, EmptyState, ErrorBanner, cx } from '../../ui';
 import { useActiveHousehold } from '../../household/ActiveHouseholdProvider';
-import type { GroceryEntry, GroceryList } from '../../api/types';
+import type { GroceryEntry } from '../../api/types';
 import { rangeLabel } from '../plans/dates';
 import { errorMessage, usePlan } from '../plans/planQueries';
+import { ConfirmDeleteListDialog } from './ConfirmDeleteListDialog';
 import { GroceryEditor } from './GroceryEditor';
 import { formatAmount, groceryEntryKey } from './format';
 import { useGenerateGroceryList, useGroceryList } from './groceryQueries';
+import { useDeletePlanGroceryList } from './shoppingListQueries';
 import { useGroceryChecks, type GroceryChecks } from './useGroceryChecks';
 
 export interface GroceryScreenProps {
@@ -86,11 +88,13 @@ export function GroceryScreen({ planId: planIdProp, onRefine, indexHref = '/groc
               }
             />
           ) : (
-            <GroceryListView
-              list={data.groceryList}
+            <PlanListView
+              entries={data.groceryList.entries}
+              generatedAt={data.groceryList.generatedAt}
               planId={planId}
               regenerating={generate.isPending}
               onRegenerate={() => generate.mutate()}
+              indexHref={indexHref}
             />
           )
         }
@@ -99,20 +103,82 @@ export function GroceryScreen({ planId: planIdProp, onRefine, indexHref = '/groc
   );
 }
 
-interface GroceryListViewProps {
-  list: GroceryList;
+interface PlanListViewProps {
+  entries: GroceryEntry[];
+  generatedAt: string;
   planId: string;
   regenerating: boolean;
   onRegenerate: () => void;
+  indexHref: string;
+}
+
+/** A plan's list: the shopping view plus Regenerate and Delete. */
+function PlanListView({ entries, generatedAt, planId, regenerating, onRegenerate, indexHref }: PlanListViewProps) {
+  const navigate = useNavigate();
+  const remove = useDeletePlanGroceryList();
+  const [confirmingDelete, setConfirmingDelete] = useState(false);
+
+  const footer = (
+    <>
+      <div className="flex flex-col gap-2 rounded-2xl border border-border bg-surface p-4">
+        <Button variant="secondary" loading={regenerating} onClick={onRegenerate} icon={<RefreshCw aria-hidden="true" className="size-4" />} className="self-start">
+          Regenerate
+        </Button>
+        <p className="text-sm text-text-muted">{REGENERATE_HINT}</p>
+        <p className="text-xs text-text-muted">Made {generatedLabel(generatedAt)}</p>
+      </div>
+      <Button variant="ghost" onClick={() => setConfirmingDelete(true)} icon={<Trash2 aria-hidden="true" className="size-4" />} className="self-start">
+        Delete list
+      </Button>
+      <ConfirmDeleteListDialog
+        open={confirmingDelete}
+        title="Delete this grocery list?"
+        description="The list is deleted. Your plan stays, and you can make a new list from it any time."
+        pending={remove.isPending}
+        error={remove.isError ? errorMessage(remove.error) : undefined}
+        onClose={() => setConfirmingDelete(false)}
+        onConfirm={() =>
+          remove.mutate(planId, {
+            onSuccess: () => {
+              setConfirmingDelete(false);
+              navigate(indexHref);
+            },
+          })
+        }
+      />
+    </>
+  );
+
+  return (
+    <ChecklistView
+      entries={entries}
+      checksId={planId}
+      version={generatedAt}
+      emptyDescription="This plan has no meals that need shopping, or your fridge already covers everything."
+      renderEditor={(onDone) => <GroceryEditor planId={planId} entries={entries} onDone={onDone} />}
+      footer={footer}
+    />
+  );
+}
+
+export interface ChecklistViewProps {
+  entries: GroceryEntry[];
+  /** Identifies the list for device-local check marks. */
+  checksId: string;
+  /** Check marks reset when this changes (for example the list's generation time). */
+  version: string;
+  emptyDescription: string;
+  renderEditor: (onDone: () => void) => ReactNode;
+  /** Rendered below the list, also when it is empty. */
+  footer?: ReactNode;
 }
 
 /** Shopping view: splits entries into "To buy" and "Done" using the device-local check state. */
-function GroceryListView({ list, planId, regenerating, onRegenerate }: GroceryListViewProps) {
+export function ChecklistView({ entries, checksId, version, emptyDescription, renderEditor, footer }: ChecklistViewProps) {
   const { activeHouseholdId } = useActiveHousehold();
-  const checks = useGroceryChecks(activeHouseholdId, planId, list.generatedAt);
-  // Checks are keyed by `generatedAt`, so regenerating the list starts fresh.
+  const checks = useGroceryChecks(activeHouseholdId, checksId, version);
   // Rows keep their original index so entries sharing a key still get unique React keys.
-  const rows = list.entries.map((entry, index) => ({ entry, key: groceryEntryKey(entry), index }));
+  const rows = entries.map((entry, index) => ({ entry, key: groceryEntryKey(entry), index }));
   const toBuy = rows.filter((row) => !checks.isChecked(row.key));
   const done = rows.filter((row) => checks.isChecked(row.key));
   const [editing, setEditing] = useState(false);
@@ -123,30 +189,13 @@ function GroceryListView({ list, planId, regenerating, onRegenerate }: GroceryLi
     </Button>
   );
 
-  const regenerate = (
-    <div className="flex flex-col gap-2 rounded-2xl border border-border bg-surface p-4">
-      <Button variant="secondary" loading={regenerating} onClick={onRegenerate} icon={<RefreshCw aria-hidden="true" className="size-4" />} className="self-start">
-        Regenerate
-      </Button>
-      <p className="text-sm text-text-muted">{REGENERATE_HINT}</p>
-      <p className="text-xs text-text-muted">Made {generatedLabel(list.generatedAt)}</p>
-    </div>
-  );
-
-  if (editing) {
-    return <GroceryEditor planId={planId} entries={list.entries} onDone={() => setEditing(false)} />;
-  }
+  if (editing) return renderEditor(() => setEditing(false));
 
   if (rows.length === 0) {
     return (
       <div className="flex flex-col gap-4">
-        <EmptyState
-          icon={<ShoppingBasket />}
-          title="Nothing to buy"
-          description="This plan has no meals that need shopping, or your fridge already covers everything."
-          action={editButton}
-        />
-        {regenerate}
+        <EmptyState icon={<ShoppingBasket />} title="Nothing to buy" description={emptyDescription} action={editButton} />
+        {footer}
       </div>
     );
   }
@@ -186,7 +235,7 @@ function GroceryListView({ list, planId, regenerating, onRegenerate }: GroceryLi
         </section>
       )}
 
-      {regenerate}
+      {footer}
     </div>
   );
 }

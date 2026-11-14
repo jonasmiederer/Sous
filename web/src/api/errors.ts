@@ -48,6 +48,8 @@ export const SERVER_ERROR_CODES = [
   'PLAN_INCONSISTENT',
   'GROCERY_CONFLICT',
   'GROCERY_LIST_NOT_FOUND',
+  'SHOPPING_LIST_NOT_FOUND',
+  'TOO_MANY_SHOPPING_LISTS',
   // Saves
   'SAVE_DID_NOT_COMPLETE',
   'SAVE_FAILED',
@@ -126,6 +128,8 @@ export const ERROR_MESSAGES: Readonly<Record<KnownErrorCode, string>> = {
   PLAN_INCONSISTENT: "We couldn't build a grocery list from this plan. Try replacing the meals that look wrong.",
   GROCERY_CONFLICT: `The grocery list was being updated at the same time. ${TRY_AGAIN}`,
   GROCERY_LIST_NOT_FOUND: "There's no grocery list for this plan yet.",
+  SHOPPING_LIST_NOT_FOUND: "That grocery list doesn't exist any more. It may have been deleted.",
+  TOO_MANY_SHOPPING_LISTS: 'You have too many grocery lists. Delete one before making another.',
 
   SAVE_DID_NOT_COMPLETE: `We couldn't save that. Your previous data is unchanged. ${TRY_AGAIN}`,
   SAVE_FAILED: `We couldn't save that. Your previous data is unchanged. ${TRY_AGAIN}`,

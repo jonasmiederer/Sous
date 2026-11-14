@@ -16,6 +16,11 @@ import type {
   CreateHouseholdRequest,
   CreateHouseholdResponse,
   FeedbackRequest,
+  AddShoppingListItemsRequest,
+  CreateShoppingListRequest,
+  ListShoppingListsResponse,
+  ShoppingListResponse,
+  UpdateShoppingListRequest,
   GenerateGroceryListResponse,
   GeneratePlanRequest,
   GetFridgeResponse,
@@ -85,6 +90,14 @@ export const ROUTES = {
   generateGroceryList: { method: 'POST', route: '/plans/{id}/grocery-list', access: 'household', timeoutMs: S10 },
   getGroceryList: { method: 'GET', route: '/plans/{id}/grocery-list', access: 'household', timeoutMs: S10 },
   updateGroceryList: { method: 'PUT', route: '/plans/{id}/grocery-list', access: 'household', timeoutMs: S10 },
+  deleteGroceryList: { method: 'DELETE', route: '/plans/{id}/grocery-list', access: 'household', timeoutMs: S10 },
+
+  listShoppingLists: { method: 'GET', route: '/shopping-lists', access: 'household', timeoutMs: S10 },
+  createShoppingList: { method: 'POST', route: '/shopping-lists', access: 'household', timeoutMs: S10 },
+  getShoppingList: { method: 'GET', route: '/shopping-lists/{id}', access: 'household', timeoutMs: S10 },
+  updateShoppingList: { method: 'PUT', route: '/shopping-lists/{id}', access: 'household', timeoutMs: S10 },
+  addShoppingListItems: { method: 'POST', route: '/shopping-lists/{id}/items', access: 'household', timeoutMs: S10 },
+  deleteShoppingList: { method: 'DELETE', route: '/shopping-lists/{id}', access: 'household', timeoutMs: S10 },
 
   getPreferences: { method: 'GET', route: '/preferences', access: 'household', timeoutMs: S10 },
   sendFeedback: { method: 'POST', route: '/preferences/feedback', access: 'household', timeoutMs: S10 },
@@ -175,6 +188,19 @@ export function createEndpoints(client: ApiClient) {
       call<GetGroceryListResponse>('getGroceryList', { id: planId }, undefined, o),
     updateGroceryList: (planId: string, body: UpdateGroceryListRequest, o?: CallOptions) =>
       call<GetGroceryListResponse>('updateGroceryList', { id: planId }, body, o),
+    deleteGroceryList: (planId: string, o?: CallOptions) =>
+      call<{ deleted: true }>('deleteGroceryList', { id: planId }, undefined, o),
+    listShoppingLists: (o?: CallOptions) => call<ListShoppingListsResponse>('listShoppingLists', {}, undefined, o),
+    createShoppingList: (body: CreateShoppingListRequest = {}, o?: CallOptions) =>
+      call<ShoppingListResponse>('createShoppingList', {}, body, o),
+    getShoppingList: (listId: string, o?: CallOptions) =>
+      call<ShoppingListResponse>('getShoppingList', { id: listId }, undefined, o),
+    updateShoppingList: (listId: string, body: UpdateShoppingListRequest, o?: CallOptions) =>
+      call<ShoppingListResponse>('updateShoppingList', { id: listId }, body, o),
+    addShoppingListItems: (listId: string, body: AddShoppingListItemsRequest, o?: CallOptions) =>
+      call<ShoppingListResponse>('addShoppingListItems', { id: listId }, body, o),
+    deleteShoppingList: (listId: string, o?: CallOptions) =>
+      call<{ deleted: true }>('deleteShoppingList', { id: listId }, undefined, o),
 
     // Preferences
     getPreferences: (o?: CallOptions) => call<GetPreferencesResponse>('getPreferences', {}, undefined, o),

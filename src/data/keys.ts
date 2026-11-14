@@ -36,6 +36,7 @@ export const KeyPrefix = {
   suggestion: 'SUGGESTION#',
   prefMemory: 'PREF_MEMORY#',
   grocery: 'GROCERY#',
+  shoppingList: 'SHOPLIST#',
   conversation: 'CONVERSATION#',
 } as const;
 
@@ -123,6 +124,8 @@ export const sortKeys = {
     KeyPrefix.prefMemory + assertKeyComponent('preferenceId', preferenceId),
   fridge: (): string => SingletonSortKey.fridge,
   grocery: (planId: PlanId): string => KeyPrefix.grocery + assertKeyComponent('planId', planId),
+  /** A standalone, named shopping list (not tied to a plan). */
+  shoppingList: (listId: string): string => KeyPrefix.shoppingList + assertKeyComponent('listId', listId),
   conversation: (conversationId: ConversationId): string =>
     KeyPrefix.conversation + assertKeyComponent('conversationId', conversationId),
 } as const;

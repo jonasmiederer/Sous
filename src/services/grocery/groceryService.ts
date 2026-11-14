@@ -114,7 +114,7 @@ export const MAX_GROCERY_ENTRIES = 500;
 export const MAX_ENTRY_NAME_LENGTH = 120;
 
 /** Validates a manually edited entry list; names are trimmed and units canonicalised. */
-function parseEntries(value: unknown): { ok: true; entries: Ingredient[] } | { ok: false; message: string } {
+export function parseEntries(value: unknown): { ok: true; entries: Ingredient[] } | { ok: false; message: string } {
   if (!Array.isArray(value)) return { ok: false, message: '"entries" must be an array.' };
   if (value.length > MAX_GROCERY_ENTRIES) {
     return { ok: false, message: `"entries" must contain at most ${MAX_GROCERY_ENTRIES} items.` };
@@ -226,6 +226,22 @@ export class GroceryService {
       }
     }
     return groceryError('GROCERY_CONFLICT', GROCERY_ERROR_MESSAGES.conflict);
+  }
+
+  /**
+   * DELETE /plans/{id}/grocery-list: remove the plan's list. The plan stays; a
+   * later "Make grocery list" builds a fresh one. Plan changes no longer
+   * regenerate anything until a list exists again.
+   */
+  async deletePlanList(planId: unknown): Promise<GroceryServiceResult<{ deleted: true }>> {
+    const sk = this.groceryListSortKey(planId);
+    if (sk === undefined) return groceryError('INVALID_REQUEST', GROCERY_ERROR_MESSAGES.invalidPlanId);
+    if ((await this.repo.get(sk)) === undefined) {
+      return groceryError('GROCERY_LIST_NOT_FOUND', GROCERY_ERROR_MESSAGES.groceryListNotFound);
+    }
+    const result = await this.repo.delete(sk);
+    if (!result.ok) return groceryError('SAVE_DID_NOT_COMPLETE', GROCERY_ERROR_MESSAGES.saveDidNotComplete);
+    return { ok: true, value: { deleted: true } };
   }
 
   /** MealPlanChanged: rebuild an existing list from the current plan (7.5). */

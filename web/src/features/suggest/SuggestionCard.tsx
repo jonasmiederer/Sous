@@ -1,7 +1,8 @@
 import { useId, useState } from 'react';
-import { Check, ChevronDown, MessageSquare, ThumbsDown, ThumbsUp, X } from 'lucide-react';
+import { Check, ChevronDown, MessageSquare, ShoppingBasket, ThumbsDown, ThumbsUp, X } from 'lucide-react';
 import type { FeedbackValue, Ingredient, SuggestionView } from '../../api/types';
 import { Button, IconButton, Skeleton, cx } from '../../ui';
+import { AddToGroceryListDialog } from '../grocery/AddToGroceryListDialog';
 
 /** Ingredient names shown on the collapsed card before "+N more". */
 export const KEY_INGREDIENT_COUNT = 5;
@@ -55,6 +56,7 @@ export function SuggestionCard({
   onRefine,
 }: SuggestionCardProps) {
   const [open, setOpen] = useState(false);
+  const [addingToList, setAddingToList] = useState(false);
   const headingId = useId();
   const detailsId = useId();
   const names = suggestion.ingredients.map((i) => i.name);
@@ -155,6 +157,14 @@ export function SuggestionCard({
           />
         </div>
         <div className="ml-auto flex flex-wrap gap-2">
+          <Button
+            variant="ghost"
+            icon={<ShoppingBasket aria-hidden="true" className="size-4" />}
+            onClick={() => setAddingToList(true)}
+            aria-label={`Add ${suggestion.name} to grocery list`}
+          >
+            Add to list
+          </Button>
           {onRefine && (
             <Button variant="ghost" icon={<MessageSquare aria-hidden="true" className="size-4" />} onClick={onRefine}>
               Refine
@@ -172,6 +182,13 @@ export function SuggestionCard({
           </Button>
         </div>
       </footer>
+
+      <AddToGroceryListDialog
+        open={addingToList}
+        onClose={() => setAddingToList(false)}
+        mealName={suggestion.name}
+        ingredients={suggestion.ingredients}
+      />
     </article>
   );
 }

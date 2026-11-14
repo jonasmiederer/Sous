@@ -11,7 +11,7 @@ import { useSession } from './auth/SessionProvider';
 import { ConfirmSignUp } from './features/auth/ConfirmSignUp';
 import { SignIn } from './features/auth/SignIn';
 import { SignUp } from './features/auth/SignUp';
-import { GroceryIndex } from './features/grocery';
+import { GroceryIndex, ShoppingListScreen } from './features/grocery';
 import { AcceptInvitation, HouseholdPicker, Members } from './features/households';
 import { NewPlan, PlansList } from './features/plans';
 import { PreferencesScreen } from './features/preferences';
@@ -96,6 +96,7 @@ export function AppRoutes() {
             <Route path="/plans/:planId" element={<PlanRoute />} />
             <Route path="/plans/:planId/grocery" element={<PlanGroceryRedirect />} />
             <Route path="/grocery" element={<GroceryIndex />} />
+            <Route path="/grocery/lists/:listId" element={<ShoppingListScreen />} />
             <Route path="/grocery/:planId" element={<GroceryRoute />} />
             <Route path="/fridge" element={<FridgeRoute />} />
             <Route path={PREFERENCES_PATH} element={<PreferencesScreen />} />
