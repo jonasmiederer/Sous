@@ -1,3 +1,4 @@
+import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
@@ -8,7 +9,10 @@ const domainDir = fileURLToPath(new URL('../src/domain', import.meta.url));
 
 const THEME_COLOR = '#2f6b3a';
 
+// Injected at build time; the release workflow bumps package.json before building.
+const appVersion = (JSON.parse(readFileSync(fileURLToPath(new URL('./package.json', import.meta.url)), 'utf8')) as { version: string }).version;
 export default defineConfig({
+  define: { __APP_VERSION__: JSON.stringify(appVersion) },
   resolve: {
     // Shared pure domain modules from the backend (presets, types, units).
     // Import them per module, e.g. `@sous/domain/presets`.

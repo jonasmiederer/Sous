@@ -3,6 +3,9 @@ import { cx } from './cx';
 export const GITHUB_URL = 'https://github.com/jonasmiederer/Sous';
 export const WEBSITE_URL = 'https://jonas-miederer.de';
 
+/** The deployed app version (web/package.json at build time). */
+export const APP_VERSION: string = __APP_VERSION__;
+
 const LINK_CLASS = 'font-medium text-accent-text underline-offset-4 hover:underline focus-visible:underline';
 
 /** Operator credit: name, personal website, and a link to the GitHub repo. */
@@ -19,6 +22,7 @@ export function SiteFooter({ className }: { className?: string }) {
           GitHub
         </a>
       </p>
+      <p className="mt-1">Version {APP_VERSION}</p>
     </footer>
   );
 }
