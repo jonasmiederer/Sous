@@ -232,6 +232,8 @@ export class SuggestionService {
       ),
     ];
 
+    const shownNames = [...new Set(sessionRecords.map((r) => r.attributes.name))];
+
     const profile = profileRecord?.attributes ?? null;
     const fridgeItems: Ingredient[] = fridgeRecord?.attributes.items ?? [];
 
@@ -244,6 +246,7 @@ export class SuggestionService {
         presets: request.presets,
         contextInput: request.contextInput ?? null,
         rejectedSuggestionNames: rejectedNames,
+        shownSuggestionNames: shownNames,
       }),
       householdPreferenceMemory: softMemory.entries.map((e) =>
         e.polarity !== undefined ? { statement: e.statement, polarity: e.polarity } : { statement: e.statement },
