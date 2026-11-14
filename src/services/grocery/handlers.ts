@@ -4,6 +4,9 @@
  *   POST /plans/{id}/grocery-list   generate (or rebuild) the plan's Grocery_List
  *   GET  /plans/{id}/grocery-list   read the stored list (404 GROCERY_LIST_NOT_FOUND)
  *   PUT  /plans/{id}/grocery-list   replace the entries with a manual edit { entries }
+ *   DELETE /plans/{id}/grocery-list delete the plan's list
+ *
+ * Standalone lists live in shoppingListHandlers.ts.
  *
  * The request's Active_Household scope was already resolved and
  * membership-verified by the authorizer (task 15.1). The handler calls the
@@ -37,6 +40,8 @@ export const GROCERY_ERROR_STATUS: Readonly<Record<GroceryServiceErrorCode, numb
   INVALID_REQUEST: 400,
   PLAN_NOT_FOUND: 404,
   GROCERY_LIST_NOT_FOUND: 404,
+  SHOPPING_LIST_NOT_FOUND: 404,
+  TOO_MANY_SHOPPING_LISTS: 409,
   PLAN_INCONSISTENT: 422,
   GROCERY_CONFLICT: 409,
   SAVE_DID_NOT_COMPLETE: 503,
@@ -44,11 +49,11 @@ export const GROCERY_ERROR_STATUS: Readonly<Record<GroceryServiceErrorCode, numb
 
 const JSON_HEADERS = { 'content-type': 'application/json' };
 
-function respond(statusCode: number, body: unknown): HttpResponse {
+export function respond(statusCode: number, body: unknown): HttpResponse {
   return { statusCode, headers: JSON_HEADERS, body: JSON.stringify(body) };
 }
 
-function errorResponse(error: GroceryServiceError): HttpResponse {
+export function errorResponse(error: GroceryServiceError): HttpResponse {
   return respond(GROCERY_ERROR_STATUS[error.code], { error: { code: error.code, message: error.message } });
 }
 
@@ -71,6 +76,15 @@ export function createGroceryHandlers(serviceFor: GroceryServiceFor) {
         if (!result.ok) return errorResponse(result.error);
         const { groceryList, version, sourcePlanVersion } = result.value;
         return respond(200, { groceryList, version, sourcePlanVersion });
+      } catch {
+        return respond(500, { error: { code: 'INTERNAL_ERROR', message: 'The request could not be completed.' } });
+      }
+    },
+
+    deleteGroceryList: async (req: AuthorizedGroceryRequest): Promise<HttpResponse> => {
+      try {
+        const result = await serviceFor(req.scope).deletePlanList(req.pathParameters?.id);
+        return result.ok ? respond(200, result.value) : errorResponse(result.error);
       } catch {
         return respond(500, { error: { code: 'INTERNAL_ERROR', message: 'The request could not be completed.' } });
       }

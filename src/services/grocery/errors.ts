@@ -10,6 +10,10 @@ export type GroceryServiceErrorCode =
   | 'PLAN_NOT_FOUND'
   /** GET /plans/{id}/grocery-list: no list has been generated for the plan. */
   | 'GROCERY_LIST_NOT_FOUND'
+  /** A standalone shopping list does not exist. */
+  | 'SHOPPING_LIST_NOT_FOUND'
+  /** The household reached the maximum number of standalone shopping lists. */
+  | 'TOO_MANY_SHOPPING_LISTS'
   /**
    * The stored plan cannot be consolidated: it references a Meal that is not
    * stored, or a Meal has an invalid ingredient quantity. Nothing is written.
@@ -35,6 +39,8 @@ export const GROCERY_ERROR_MESSAGES = {
   invalidPlanId: 'The plan id is not valid.',
   planNotFound: 'The meal plan was not found.',
   groceryListNotFound: 'No grocery list has been generated for this meal plan.',
+  shoppingListNotFound: 'The grocery list was not found.',
+  tooManyShoppingLists: 'There are too many grocery lists. Delete one before creating another.',
   conflict: 'The grocery list was changed concurrently; try again.',
   saveDidNotComplete: 'The save did not complete; the previously saved data is unchanged.',
 } as const;
